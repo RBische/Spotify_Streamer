@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="tile_height_avatar_with_one_line_text">56dp</dimen>
+    <dimen name="padding_horizontal">16dp</dimen>
+    <dimen name="tile_height_avatar_with_two_line_text">72dp</dimen>
+    <dimen name="small_padding_vertical">8dp</dimen>
+</resources>
