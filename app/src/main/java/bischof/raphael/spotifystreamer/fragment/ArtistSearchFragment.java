@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,6 +36,7 @@ import kaaes.spotify.webapi.android.models.Artist;
 public class ArtistSearchFragment extends Fragment {
 
     private static final String ET_SAVED = "EditTextSavedInstanceState";
+    private static final String LOG_TAG = ArtistSearchFragment.class.getSimpleName();
     private ArtistAdapter mLvArtistAdapter;
     private EditText mEtArtist;
     private ArtistLoader mLoader;
@@ -115,30 +117,39 @@ public class ArtistSearchFragment extends Fragment {
             mLoader.setOnContentLoadedListener(new OnContentLoadedListener<List<Artist>>() {
                 @Override
                 public void onContentLoaded(List<Artist> content) {
-                    if (content.size()==0){
-                        if (mToast!=null){
-                            mToast.cancel();
-                            mToast = null;
+                    try {
+                        if (content.size() == 0) {
+                            if (mToast != null) {
+                                mToast.cancel();
+                                mToast = null;
+                            }
+                            mToast = Toast.makeText(getActivity(), getString(R.string.refine_search), Toast.LENGTH_SHORT);
+                            mToast.show();
                         }
-                        mToast = Toast.makeText(getActivity(), getString(R.string.refine_search), Toast.LENGTH_SHORT);
-                        mToast.show();
+                        mLvArtistAdapter.clear();
+                        mLvArtistAdapter.addAll(content);
+                    } catch (IllegalStateException e) {
+                        Log.d(LOG_TAG, "Activity (context) seems to have been recycled. " + e.getMessage());
                     }
-                    mLvArtistAdapter.clear();
-                    mLvArtistAdapter.addAll(content);
                 }
 
                 @Override
                 public void onContentError(String errorMessage) {
-                    if (mToast!=null){
-                        mToast.cancel();
-                        mToast = null;
+                    try {
+                        if (mToast != null) {
+                            mToast.cancel();
+                            mToast = null;
+                        }
+                        mToast = Toast.makeText(getActivity(), getString(R.string.connection_needed), Toast.LENGTH_SHORT);
+                        mToast.show();
                     }
-                    mToast = Toast.makeText(getActivity(), getString(R.string.connection_needed), Toast.LENGTH_SHORT);
-                    mToast.show();
+                    catch(IllegalStateException e)
+                    {
+                        Log.d(LOG_TAG, "Activity (context) seems to have been recycled. " + e.getMessage());
+                    }
                 }
             });
             mLoader.execute(artist);
         }
     }
-
 }

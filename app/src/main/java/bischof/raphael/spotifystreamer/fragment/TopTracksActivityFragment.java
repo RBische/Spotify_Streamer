@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +28,7 @@ import bischof.raphael.spotifystreamer.async.TopTracksLoader;
  */
 public class TopTracksActivityFragment extends Fragment {
 
+    private static final String LOG_TAG = TopTracksActivityFragment.class.getSimpleName();
     private ListView mLvTopTracks;
     private Toast mToast;
 
@@ -52,26 +54,34 @@ public class TopTracksActivityFragment extends Fragment {
         loader.setOnContentLoadedListener(new OnContentLoadedListener<TopTracksAdapter>() {
             @Override
             public void onContentLoaded(TopTracksAdapter content) {
-                if (content.getCount()==0){
-                    if (mToast!=null){
-                        mToast.cancel();
-                        mToast = null;
+                try{
+                    if (content.getCount()==0){
+                        if (mToast!=null){
+                            mToast.cancel();
+                            mToast = null;
+                        }
+                        mToast = Toast.makeText(getActivity(), getString(R.string.no_top_tracks), Toast.LENGTH_SHORT);
+                        mToast.show();
+                    }else{
+                        mLvTopTracks.setAdapter(content);
                     }
-                    mToast = Toast.makeText(getActivity(), getString(R.string.no_top_tracks), Toast.LENGTH_SHORT);
-                    mToast.show();
-                }else{
-                    mLvTopTracks.setAdapter(content);
+                }catch (IllegalStateException e){
+                    Log.d(LOG_TAG, "Activity (context) seems to have been recycled. " + e.getMessage());
                 }
             }
 
             @Override
             public void onContentError(String errorMessage) {
-                if (mToast!=null){
-                    mToast.cancel();
-                    mToast = null;
+                try {
+                    if (mToast!=null){
+                        mToast.cancel();
+                        mToast = null;
+                    }
+                    mToast = Toast.makeText(getActivity(), getString(R.string.connection_needed), Toast.LENGTH_SHORT);
+                    mToast.show();
+                }catch (IllegalStateException e){
+                    Log.d(LOG_TAG, "Activity (context) seems to have been recycled. " + e.getMessage());
                 }
-                mToast = Toast.makeText(getActivity(), getString(R.string.connection_needed), Toast.LENGTH_SHORT);
-                mToast.show();
             }
         });
         loader.execute(getActivity().getIntent().getStringExtra(Intent.EXTRA_TEXT));
