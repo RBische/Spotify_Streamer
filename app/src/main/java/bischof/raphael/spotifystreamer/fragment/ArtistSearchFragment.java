@@ -26,6 +26,8 @@ import bischof.raphael.spotifystreamer.activity.TopTracksActivity;
 import bischof.raphael.spotifystreamer.adapter.ArtistAdapter;
 import bischof.raphael.spotifystreamer.async.ArtistLoader;
 import bischof.raphael.spotifystreamer.async.OnContentLoadedListener;
+import butterknife.ButterKnife;
+import butterknife.InjectView;
 import kaaes.spotify.webapi.android.models.Artist;
 
 /**
@@ -37,8 +39,11 @@ public class ArtistSearchFragment extends Fragment {
 
     private static final String ET_SAVED = "EditTextSavedInstanceState";
     private static final String LOG_TAG = ArtistSearchFragment.class.getSimpleName();
+
+    @InjectView(R.id.etArtist) EditText mEtArtist;
+    @InjectView(R.id.lvArtist) ListView mLvArtist;
+
     private ArtistAdapter mLvArtistAdapter;
-    private EditText mEtArtist;
     private ArtistLoader mLoader;
     private Toast mToast;
 
@@ -49,9 +54,7 @@ public class ArtistSearchFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_artist_search, container, false);
-        //Once the view is inflated, store UI components in fields to use them later
-        ListView lvArtist = (ListView) v.findViewById(R.id.lvArtist);
-        mEtArtist = (EditText)v.findViewById(R.id.etArtist);
+        ButterKnife.inject(this, v);
 
         //Get the size of desired bitmap to know which image to load in ImageView later
         //The goal is to avoid big bitmaps download and to load image at the best quality that can be displayed
@@ -59,7 +62,7 @@ public class ArtistSearchFragment extends Fragment {
 
         //Fill UI with empty adapter
         mLvArtistAdapter = new ArtistAdapter(getActivity(),new ArrayList<Artist>(),sizeOfImageToLoad);
-        lvArtist.setAdapter(mLvArtistAdapter);
+        mLvArtist.setAdapter(mLvArtistAdapter);
 
         //Set the listeners on UI components
         mEtArtist.addTextChangedListener(new TextWatcher() {
@@ -78,7 +81,7 @@ public class ArtistSearchFragment extends Fragment {
                 //intentionally does nothing
             }
         });
-        lvArtist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mLvArtist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent i = new Intent(getActivity(), TopTracksActivity.class);

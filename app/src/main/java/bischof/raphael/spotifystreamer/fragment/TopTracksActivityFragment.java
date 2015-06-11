@@ -23,6 +23,8 @@ import bischof.raphael.spotifystreamer.adapter.TopTracksAdapter;
 import bischof.raphael.spotifystreamer.async.OnContentLoadedListener;
 import bischof.raphael.spotifystreamer.async.TopTracksLoader;
 import bischof.raphael.spotifystreamer.model.ParcelableTrack;
+import butterknife.ButterKnife;
+import butterknife.InjectView;
 
 /**
  * Fragment containing a {@link ListView} to show top tracks.
@@ -35,7 +37,7 @@ public class TopTracksActivityFragment extends Fragment {
     private static final String LV_SAVED = "LvItemsToSave";
     private TopTracksAdapter mLvTopTracksAdapter;
     private Toast mToast;
-    private ListView mLvTopTracks;
+    @InjectView(R.id.lvTopTracks) ListView mLvTopTracks;
 
     public TopTracksActivityFragment() {
     }
@@ -54,7 +56,7 @@ public class TopTracksActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_top_tracks, container, false);
-        mLvTopTracks = (ListView) v.findViewById(R.id.lvTopTracks);
+        ButterKnife.inject(this, v);
 
         if(savedInstanceState==null){
             mLvTopTracksAdapter = new TopTracksAdapter(getActivity(),new ArrayList<ParcelableTrack>());

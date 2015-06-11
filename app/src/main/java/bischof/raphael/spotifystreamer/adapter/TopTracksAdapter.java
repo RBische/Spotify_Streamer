@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import bischof.raphael.spotifystreamer.R;
 import bischof.raphael.spotifystreamer.model.ParcelableTrack;
 import bischof.raphael.spotifystreamer.picasso.CircleTransform;
+import butterknife.ButterKnife;
+import butterknife.InjectView;
 
 /**
  * Displays a list of top tracks.
@@ -62,31 +64,36 @@ public class TopTracksAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        View view;
-        TextView tvText1;
-        TextView tvText2;
-        ImageView ivThumb;
-        ParcelableTrack track = getItem(position);
-
-        if (convertView == null) {
-            view = mInflater.inflate(R.layout.adapter_thumb_two_line_item, parent, false);
+    public View getView(int position, View view, ViewGroup parent) {
+        ViewHolder holder;
+        if (view != null) {
+            holder = (ViewHolder) view.getTag();
         } else {
-            view = convertView;
+            view = mInflater.inflate(R.layout.adapter_thumb_two_line_item, parent, false);
+            holder = new ViewHolder(view);
+            view.setTag(holder);
         }
 
-        tvText1 = (TextView) view.findViewById(R.id.tvText1);
-        tvText2 = (TextView) view.findViewById(R.id.tvText2);
-        ivThumb = (ImageView) view.findViewById(R.id.ivThumb);
+        ParcelableTrack track = getItem(position);
 
-        tvText1.setText(track.getName());
-        tvText2.setText(track.getAlbumName());
+        holder.tvText1.setText(track.getName());
+        holder.tvText2.setText(track.getAlbumName());
         if (track.getImageUrlSmall()!=null){
             Picasso.with(mContext).load(track.getImageUrlSmall())
                     .transform(new CircleTransform())
-                    .placeholder(R.drawable.ic_cd_placeholder).into(ivThumb);
+                    .placeholder(R.drawable.ic_cd_placeholder).into(holder.ivThumb);
         }
         return view;
+    }
+
+    static class ViewHolder {
+        @InjectView(R.id.tvText1) TextView tvText1;
+        @InjectView(R.id.tvText2) TextView tvText2;
+        @InjectView(R.id.ivThumb) ImageView ivThumb;
+
+        public ViewHolder(View view) {
+            ButterKnife.inject(this, view);
+        }
     }
 
     /**

@@ -18,6 +18,8 @@ import java.util.List;
 
 import bischof.raphael.spotifystreamer.R;
 import bischof.raphael.spotifystreamer.picasso.CircleTransform;
+import butterknife.ButterKnife;
+import butterknife.InjectView;
 import kaaes.spotify.webapi.android.models.Artist;
 
 /**
@@ -69,22 +71,18 @@ public class ArtistAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        View view;
-        TextView tvText1;
-        ImageView ivThumb;
+    public View getView(int position, View view, ViewGroup parent) {
         Artist artist = getItem(position);
-
-        if (convertView == null) {
-            view = mInflater.inflate(R.layout.adapter_thumb_item, parent, false);
+        ViewHolder holder;
+        if (view != null) {
+            holder = (ViewHolder) view.getTag();
         } else {
-            view = convertView;
+            view = mInflater.inflate(R.layout.adapter_thumb_item, parent, false);
+            holder = new ViewHolder(view);
+            view.setTag(holder);
         }
 
-        tvText1 = (TextView) view.findViewById(R.id.tvText1);
-        ivThumb = (ImageView) view.findViewById(R.id.ivThumb);
-
-        tvText1.setText(artist.name);
+        holder.tvText1.setText(artist.name);
         String imageUrl = null;
         if(artist.images!=null){
             if(artist.images.size()>0){
@@ -107,9 +105,18 @@ public class ArtistAdapter extends BaseAdapter {
                     .load(imageUrl)
                     .transform(new CircleTransform())
                     .placeholder(R.drawable.ic_cd_placeholder)
-                    .into(ivThumb);
+                    .into(holder.ivThumb);
         }
         return view;
+    }
+
+    static class ViewHolder {
+        @InjectView(R.id.tvText1) TextView tvText1;
+        @InjectView(R.id.ivThumb) ImageView ivThumb;
+
+        public ViewHolder(View view) {
+            ButterKnife.inject(this, view);
+        }
     }
 
     /**
