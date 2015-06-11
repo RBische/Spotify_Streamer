@@ -19,16 +19,15 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import bischof.raphael.spotifystreamer.R;
 import bischof.raphael.spotifystreamer.activity.TopTracksActivity;
 import bischof.raphael.spotifystreamer.adapter.ArtistAdapter;
 import bischof.raphael.spotifystreamer.async.ArtistLoader;
 import bischof.raphael.spotifystreamer.async.OnContentLoadedListener;
+import bischof.raphael.spotifystreamer.model.ParcelableArtist;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import kaaes.spotify.webapi.android.models.Artist;
 
 /**
  * Fragment containing the {@link EditText} used to search an artist and a {@link ListView} to show results.
@@ -38,6 +37,7 @@ import kaaes.spotify.webapi.android.models.Artist;
 public class ArtistSearchFragment extends Fragment {
 
     private static final String ET_SAVED = "EditTextSavedInstanceState";
+    private static final String LV_SAVED = "LvItemsToSave";
     private static final String LOG_TAG = ArtistSearchFragment.class.getSimpleName();
 
     @InjectView(R.id.etArtist) EditText mEtArtist;
@@ -46,6 +46,7 @@ public class ArtistSearchFragment extends Fragment {
     private ArtistAdapter mLvArtistAdapter;
     private ArtistLoader mLoader;
     private Toast mToast;
+    private boolean mTriggerTextChange = true;
 
     public ArtistSearchFragment() {
     }
@@ -56,12 +57,8 @@ public class ArtistSearchFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_artist_search, container, false);
         ButterKnife.inject(this, v);
 
-        //Get the size of desired bitmap to know which image to load in ImageView later
-        //The goal is to avoid big bitmaps download and to load image at the best quality that can be displayed
-        int sizeOfImageToLoad = (int) getResources().getDimension(R.dimen.tile_height_avatar_with_one_line_text);
-
         //Fill UI with empty adapter
-        mLvArtistAdapter = new ArtistAdapter(getActivity(),new ArrayList<Artist>(),sizeOfImageToLoad);
+        mLvArtistAdapter = new ArtistAdapter(getActivity(),new ArrayList<ParcelableArtist>());
         mLvArtist.setAdapter(mLvArtistAdapter);
 
         //Set the listeners on UI components
@@ -73,7 +70,11 @@ public class ArtistSearchFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                searchArtist(s.toString());
+                if(mTriggerTextChange){
+                    searchArtist(s.toString());
+                }else{
+                    mTriggerTextChange = true;
+                }
             }
 
             @Override
@@ -85,8 +86,8 @@ public class ArtistSearchFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent i = new Intent(getActivity(), TopTracksActivity.class);
-                i.putExtra(Intent.EXTRA_TEXT, mLvArtistAdapter.getItem(position).id);
-                i.putExtra(Intent.EXTRA_TITLE, mLvArtistAdapter.getItem(position).name);
+                i.putExtra(Intent.EXTRA_TEXT, mLvArtistAdapter.getItem(position).getId());
+                i.putExtra(Intent.EXTRA_TITLE, mLvArtistAdapter.getItem(position).getName());
                 startActivity(i);
             }
         });
@@ -97,7 +98,13 @@ public class ArtistSearchFragment extends Fragment {
     public void onViewStateRestored(Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
         if (savedInstanceState!=null){
+            mTriggerTextChange = false;
             mEtArtist.setText(savedInstanceState.getString(ET_SAVED));
+            if(savedInstanceState.containsKey(LV_SAVED)){
+                ArrayList<ParcelableArtist> artists = savedInstanceState.getParcelableArrayList(LV_SAVED);
+                mLvArtistAdapter.clear();
+                mLvArtistAdapter.addAll(artists);
+            }
         }
     }
 
@@ -105,6 +112,7 @@ public class ArtistSearchFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(ET_SAVED,mEtArtist.getText().toString());
+        outState.putParcelableArrayList(LV_SAVED,mLvArtistAdapter.getArtists());
     }
 
     /**
@@ -116,10 +124,15 @@ public class ArtistSearchFragment extends Fragment {
             if (mLoader != null) {
                 mLoader.cancel(true);
             }
-            mLoader = new ArtistLoader();
-            mLoader.setOnContentLoadedListener(new OnContentLoadedListener<List<Artist>>() {
+
+            //Get the size of desired bitmap to know which image to load in ImageView later
+            //The goal is to avoid big bitmaps download and to load image at the best quality that can be displayed
+            int sizeOfImageToLoad = (int) getResources().getDimension(R.dimen.tile_height_avatar_with_one_line_text);
+
+            mLoader = new ArtistLoader(sizeOfImageToLoad);
+            mLoader.setOnContentLoadedListener(new OnContentLoadedListener<ArrayList<ParcelableArtist>>() {
                 @Override
-                public void onContentLoaded(List<Artist> content) {
+                public void onContentLoaded(ArrayList<ParcelableArtist> content) {
                     try {
                         if (content.size() == 0) {
                             if (mToast != null) {

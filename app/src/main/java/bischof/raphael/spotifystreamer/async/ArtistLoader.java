@@ -5,11 +5,12 @@
 package bischof.raphael.spotifystreamer.async;
 
 import android.os.AsyncTask;
-import java.util.List;
 
+import java.util.ArrayList;
+
+import bischof.raphael.spotifystreamer.model.ParcelableArtist;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
-import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
 import retrofit.RetrofitError;
 
@@ -21,7 +22,16 @@ public class ArtistLoader extends AsyncTask<String, Void, ArtistLoader.Response>
     /**
      * The listener that receives notifications the asynctask finished its work
      */
-    private OnContentLoadedListener<List<Artist>> listener;
+    private OnContentLoadedListener<ArrayList<ParcelableArtist>> listener;
+    private int mSizeOfImageToLoad;
+
+    /**
+     * Constructor
+     * @param sizeOfImageToLoad size of the ImageView in px where the thumbnail will be displayed
+     */
+    public ArtistLoader(int sizeOfImageToLoad) {
+        this.mSizeOfImageToLoad = sizeOfImageToLoad;
+    }
 
     /**
      * Search and loads the artist asynchronously and store it in result
@@ -34,7 +44,7 @@ public class ArtistLoader extends AsyncTask<String, Void, ArtistLoader.Response>
             SpotifyApi api = new SpotifyApi();
             SpotifyService spotify = api.getService();
             ArtistsPager pager = spotify.searchArtists(params[0]);
-            return new Response(null,pager.artists.items);
+            return new Response(null,ParcelableArtist.convertFromArtistList(pager.artists.items,mSizeOfImageToLoad));
         }catch (RetrofitError e){
             return new Response(e,null);
         }
@@ -60,7 +70,7 @@ public class ArtistLoader extends AsyncTask<String, Void, ArtistLoader.Response>
      *
      * @param listener The callback that will be invoked.
      */
-    public void setOnContentLoadedListener(OnContentLoadedListener<List<Artist>> listener) {
+    public void setOnContentLoadedListener(OnContentLoadedListener<ArrayList<ParcelableArtist>> listener) {
         this.listener = listener;
     }
 
@@ -69,9 +79,9 @@ public class ArtistLoader extends AsyncTask<String, Void, ArtistLoader.Response>
      */
     protected class Response{
         private RetrofitError error;
-        private List<Artist> artists;
+        private ArrayList<ParcelableArtist> artists;
 
-        public Response(RetrofitError error, List<Artist> artists) {
+        public Response(RetrofitError error, ArrayList<ParcelableArtist> artists) {
             this.error = error;
             this.artists = artists;
         }
@@ -80,7 +90,7 @@ public class ArtistLoader extends AsyncTask<String, Void, ArtistLoader.Response>
             return error;
         }
 
-        public List<Artist> getArtists() {
+        public ArrayList<ParcelableArtist> getArtists() {
             return artists;
         }
     }

@@ -5,6 +5,7 @@
 package bischof.raphael.spotifystreamer.adapter;
 
 import android.content.Context;
+import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,13 +15,13 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import bischof.raphael.spotifystreamer.R;
+import bischof.raphael.spotifystreamer.model.ParcelableArtist;
 import bischof.raphael.spotifystreamer.picasso.CircleTransform;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import kaaes.spotify.webapi.android.models.Artist;
 
 /**
  * Displays a list of artists
@@ -31,12 +32,7 @@ public class ArtistAdapter extends BaseAdapter {
     /**
      * Containing all the displayed artists
      */
-    private List<Artist> mArtists;
-
-    /**
-     * Min reference size for future bitmaps loading
-     */
-    private int mSizeOfImageToLoad;
+    private ArrayList<ParcelableArtist> mArtists;
     private Context mContext;
     private LayoutInflater mInflater;
 
@@ -45,13 +41,11 @@ public class ArtistAdapter extends BaseAdapter {
      *
      * @param context The current context.
      * @param artists The objects to represent in the ListView.
-     * @param sizeOfImageToLoad Min reference size for future bitmaps loading
      */
-    public ArtistAdapter(Context context, List<Artist> artists, int sizeOfImageToLoad) {
+    public ArtistAdapter(Context context, ArrayList<ParcelableArtist> artists) {
         this.mArtists = artists;
         this.mContext = context;
         mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        this.mSizeOfImageToLoad = sizeOfImageToLoad;
     }
 
     @Override
@@ -60,7 +54,7 @@ public class ArtistAdapter extends BaseAdapter {
     }
 
     @Override
-    public Artist getItem(int position) {
+    public ParcelableArtist getItem(int position) {
         return mArtists.get(position);
     }
 
@@ -72,7 +66,7 @@ public class ArtistAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View view, ViewGroup parent) {
-        Artist artist = getItem(position);
+        ParcelableArtist artist = getItem(position);
         ViewHolder holder;
         if (view != null) {
             holder = (ViewHolder) view.getTag();
@@ -82,32 +76,19 @@ public class ArtistAdapter extends BaseAdapter {
             view.setTag(holder);
         }
 
-        holder.tvText1.setText(artist.name);
-        String imageUrl = null;
-        if(artist.images!=null){
-            if(artist.images.size()>0){
-                //Take the smallest size of bitmap but > sizeImageToLoad or the first one if no other are fitting better
-                int indexKeeped = -1;
-                for(int i=0;i<artist.images.size();i++){
-                    if (indexKeeped==-1){
-                        indexKeeped=i;
-                    }else if (artist.images.get(i).height*artist.images.get(i).width> mSizeOfImageToLoad * mSizeOfImageToLoad){
-                        if(artist.images.get(i).height*artist.images.get(i).width<artist.images.get(indexKeeped).height*artist.images.get(indexKeeped).width){
-                            indexKeeped=i;
-                        }
-                    }
-                }
-                imageUrl = artist.images.get(indexKeeped).url;
-            }
-        }
-        if (imageUrl!=null){
+        holder.tvText1.setText(artist.getName());
+        if (artist.getImageUrl()!=null){
             Picasso.with(mContext)
-                    .load(imageUrl)
+                    .load(artist.getImageUrl())
                     .transform(new CircleTransform())
                     .placeholder(R.drawable.ic_cd_placeholder)
                     .into(holder.ivThumb);
         }
         return view;
+    }
+
+    public ArrayList<ParcelableArtist> getArtists() {
+        return mArtists;
     }
 
     static class ViewHolder {
@@ -132,7 +113,7 @@ public class ArtistAdapter extends BaseAdapter {
      *
      * @param artists The Collection to add at the end of the array.
      */
-    public void addAll(List<Artist> artists){
+    public void addAll(ArrayList<ParcelableArtist> artists){
         mArtists.addAll(artists);
         notifyDataSetChanged();
     }
