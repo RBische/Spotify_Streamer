@@ -4,68 +4,57 @@
 
 package bischof.raphael.spotifystreamer.async;
 
-import android.content.Context;
 import android.os.AsyncTask;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import bischof.raphael.spotifystreamer.adapter.TopTracksAdapter;
-import bischof.raphael.spotifystreamer.database.SpotifyDatasource;
+import bischof.raphael.spotifystreamer.model.ParcelableTrack;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
 import retrofit.RetrofitError;
 
 /**
- * Search/loads/store top tracks of a specified artist.
- * Needs a context to achieve the maximum of work in the background task to avoid UI freeze (like storing top tracks in DB,clean old datas, etc...)
+ * Search/loads top tracks of a specified artist.
  * Created by biche on 11/06/2015.
  */
 public class TopTracksLoader extends AsyncTask<String, Void, TopTracksLoader.Response> {
-    /**
-     * The listener that receives notifications the asynctask finished its work
-     */
-    private OnContentLoadedListener<TopTracksAdapter> listener;
-
-    private Context mContext;
+    private int mSizeOfImageToLoad;
 
     /**
      * Constructor
-     *
-     * @param context The current context.
+     * @param sizeOfImageToLoad size of the ImageView in px where the thumbnail will be displayed
      */
-    public TopTracksLoader(Context context) {
-        this.mContext = context;
+    public TopTracksLoader(int sizeOfImageToLoad) {
+        this.mSizeOfImageToLoad = sizeOfImageToLoad;
     }
 
     /**
-     * Search/loads and store top tracks of an artist asynchronously
+     * The listener that receives notifications the asynctask finished its work
+     */
+    private OnContentLoadedListener<ArrayList<ParcelableTrack>> listener;
+
+    /**
+     * Search/loads top tracks of an artist asynchronously
      * @param params String array in which item at index 0 is considered as the artist's id searched
      * @return Returns a {@link Response} that contains either an adapter to display the results or a string explaning the error
      */
     @Override
     protected Response doInBackground(String... params) {
-        SpotifyDatasource datasource = new SpotifyDatasource(mContext);
-        datasource.open();
-        boolean isEverLoaded = datasource.isTopTracksInDB(params[0]);
-        if (!isEverLoaded){
-            try {
-                SpotifyApi api = new SpotifyApi();
-                SpotifyService spotify = api.getService();
-                Map<String, Object> options = new HashMap<>();
-                options.put("country", Locale.getDefault().getCountry());
-                Tracks tracks = spotify.getArtistTopTrack(params[0],options);
-                TopTracksAdapter adapter = datasource.createTopTracksCursorAdapter(mContext, params[0], tracks.tracks);
-                return new Response(null,adapter);
-            }catch (RetrofitError e){
-                datasource.close();
-                return new Response(e,null);
-            }
-        }else{
-            TopTracksAdapter adapter = datasource.createTopTracksCursorAdapter(mContext, params[0]);
-            return new Response(null,adapter);
+        try {
+            SpotifyApi api = new SpotifyApi();
+            SpotifyService spotify = api.getService();
+            Map<String, Object> options = new HashMap<>();
+            options.put("country", Locale.getDefault().getCountry());
+            Tracks tracks = spotify.getArtistTopTrack(params[0],options);
+            return new Response(null,tracks.tracks);
+        }catch (RetrofitError e){
+            return new Response(e,null);
         }
     }
 
@@ -74,8 +63,8 @@ public class TopTracksLoader extends AsyncTask<String, Void, TopTracksLoader.Res
     protected void onPostExecute(Response response) {
         super.onPostExecute(response);
         if(listener!=null){
-            if (response!=null&&response.getAdapter()!=null){
-                listener.onContentLoaded(response.getAdapter());
+            if (response!=null&&response.getTracks()!=null){
+                listener.onContentLoaded(ParcelableTrack.convertFromTrackList(response.getTracks(),mSizeOfImageToLoad));
             }else{
                 if (response!=null&&response.getError()!=null) {
                     listener.onContentError(response.getError().getMessage());
@@ -89,7 +78,7 @@ public class TopTracksLoader extends AsyncTask<String, Void, TopTracksLoader.Res
      *
      * @param listener The callback that will be invoked.
      */
-    public void setOnContentLoadedListener(OnContentLoadedListener<TopTracksAdapter> listener) {
+    public void setOnContentLoadedListener(OnContentLoadedListener<ArrayList<ParcelableTrack>> listener) {
         this.listener = listener;
     }
 
@@ -99,19 +88,19 @@ public class TopTracksLoader extends AsyncTask<String, Void, TopTracksLoader.Res
      */
     protected class Response {
         private RetrofitError error;
-        private TopTracksAdapter adapter;
+        private List<Track> tracks;
 
-        public Response(RetrofitError error, TopTracksAdapter adapter) {
+        public Response(RetrofitError error, List<Track> tracks) {
             this.error = error;
-            this.adapter = adapter;
+            this.tracks = tracks;
         }
 
         public RetrofitError getError() {
             return error;
         }
 
-        public TopTracksAdapter getAdapter() {
-            return adapter;
+        public List<Track> getTracks() {
+            return tracks;
         }
     }
 }

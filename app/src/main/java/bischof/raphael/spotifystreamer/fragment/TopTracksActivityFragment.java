@@ -16,10 +16,13 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 import bischof.raphael.spotifystreamer.R;
 import bischof.raphael.spotifystreamer.adapter.TopTracksAdapter;
 import bischof.raphael.spotifystreamer.async.OnContentLoadedListener;
 import bischof.raphael.spotifystreamer.async.TopTracksLoader;
+import bischof.raphael.spotifystreamer.model.ParcelableTrack;
 
 /**
  * Fragment containing a {@link ListView} to show top tracks.
@@ -29,8 +32,10 @@ import bischof.raphael.spotifystreamer.async.TopTracksLoader;
 public class TopTracksActivityFragment extends Fragment {
 
     private static final String LOG_TAG = TopTracksActivityFragment.class.getSimpleName();
-    private ListView mLvTopTracks;
+    private static final String LV_SAVED = "LvItemsToSave";
+    private TopTracksAdapter mLvTopTracksAdapter;
     private Toast mToast;
+    private ListView mLvTopTracks;
 
     public TopTracksActivityFragment() {
     }
@@ -49,13 +54,46 @@ public class TopTracksActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_top_tracks, container, false);
-        mLvTopTracks = (ListView)v.findViewById(R.id.lvTopTracks);
-        TopTracksLoader loader = new TopTracksLoader(getActivity());
-        loader.setOnContentLoadedListener(new OnContentLoadedListener<TopTracksAdapter>() {
+        mLvTopTracks = (ListView) v.findViewById(R.id.lvTopTracks);
+
+        if(savedInstanceState==null){
+            mLvTopTracksAdapter = new TopTracksAdapter(getActivity(),new ArrayList<ParcelableTrack>());
+            mLvTopTracks.setAdapter(mLvTopTracksAdapter);
+            searchTopTracks();
+        }
+        return v;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(LV_SAVED,mLvTopTracksAdapter.getTracks());
+    }
+
+    @Override
+    public void onViewStateRestored(Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        if (savedInstanceState!=null&&savedInstanceState.containsKey(LV_SAVED)){
+            ArrayList<ParcelableTrack> tracks = savedInstanceState.getParcelableArrayList(LV_SAVED);
+            mLvTopTracksAdapter = new TopTracksAdapter(getActivity(),tracks);
+            mLvTopTracks.setAdapter(mLvTopTracksAdapter);
+        }
+    }
+
+    /**
+     * Search and load top tracks for an artist specified in Intent.EXTRA_TEXT
+     */
+    private void searchTopTracks() {
+        //Get the size of desired bitmap to know which image to load in ImageView later
+        //The goal is to avoid big bitmaps download and to load image at the best quality that can be displayed
+        int sizeOfImageToLoad = (int) getResources().getDimension(R.dimen.tile_height_avatar_with_one_line_text);
+
+        TopTracksLoader loader = new TopTracksLoader(sizeOfImageToLoad);
+        loader.setOnContentLoadedListener(new OnContentLoadedListener<ArrayList<ParcelableTrack>>() {
             @Override
-            public void onContentLoaded(TopTracksAdapter content) {
+            public void onContentLoaded(ArrayList<ParcelableTrack> content) {
                 try{
-                    if (content.getCount()==0){
+                    if (content.size()==0){
                         if (mToast!=null){
                             mToast.cancel();
                             mToast = null;
@@ -63,7 +101,8 @@ public class TopTracksActivityFragment extends Fragment {
                         mToast = Toast.makeText(getActivity(), getString(R.string.no_top_tracks), Toast.LENGTH_SHORT);
                         mToast.show();
                     }else{
-                        mLvTopTracks.setAdapter(content);
+                        mLvTopTracksAdapter.clear();
+                        mLvTopTracksAdapter.addAll(content);
                     }
                 }catch (IllegalStateException e){
                     Log.d(LOG_TAG, "Activity (context) seems to have been recycled. " + e.getMessage());
@@ -85,6 +124,5 @@ public class TopTracksActivityFragment extends Fragment {
             }
         });
         loader.execute(getActivity().getIntent().getStringExtra(Intent.EXTRA_TEXT));
-        return v;
     }
 }
