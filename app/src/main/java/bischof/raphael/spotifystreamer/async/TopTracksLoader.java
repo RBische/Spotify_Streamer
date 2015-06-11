@@ -24,17 +24,27 @@ import retrofit.RetrofitError;
  * Created by biche on 11/06/2015.
  */
 public class TopTracksLoader extends AsyncTask<String, Void, TopTracksLoader.Response> {
-    private Context mContext;
+    /**
+     * The listener that receives notifications the asynctask finished its work
+     */
     private OnContentLoadedListener<TopTracksAdapter> listener;
 
+    private Context mContext;
+
+    /**
+     * Constructor
+     *
+     * @param context The current context.
+     */
     public TopTracksLoader(Context context) {
         this.mContext = context;
     }
 
-    public void setOnContentLoadedListener(OnContentLoadedListener<TopTracksAdapter> listener) {
-        this.listener = listener;
-    }
-
+    /**
+     * Search/loads and store top tracks of an artist asynchronously
+     * @param params String array in which item at index 0 is considered as the artist's id searched
+     * @return Returns a {@link Response} that contains either an adapter to display the results or a string explaning the error
+     */
     @Override
     protected Response doInBackground(String... params) {
         SpotifyDatasource datasource = new SpotifyDatasource(mContext);
@@ -74,6 +84,19 @@ public class TopTracksLoader extends AsyncTask<String, Void, TopTracksLoader.Res
         }
     }
 
+    /**
+     * Register a callback to be invoked when the asynctask finished its work
+     *
+     * @param listener The callback that will be invoked.
+     */
+    public void setOnContentLoadedListener(OnContentLoadedListener<TopTracksAdapter> listener) {
+        this.listener = listener;
+    }
+
+
+    /**
+     * Class formatting the AsyncTask result.
+     */
     protected class Response {
         private RetrofitError error;
         private TopTracksAdapter adapter;

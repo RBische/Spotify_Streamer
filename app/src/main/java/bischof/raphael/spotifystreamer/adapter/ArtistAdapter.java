@@ -25,11 +25,26 @@ import kaaes.spotify.webapi.android.models.Artist;
  * Created by biche on 10/06/2015.
  */
 public class ArtistAdapter extends BaseAdapter {
+
+    /**
+     * Containing all the displayed artists
+     */
     private List<Artist> mArtists;
+
+    /**
+     * Min reference size for future bitmaps loading
+     */
+    private int mSizeOfImageToLoad;
     private Context mContext;
     private LayoutInflater mInflater;
-    private int mSizeOfImageToLoad;
 
+    /**
+     * Constructor
+     *
+     * @param context The current context.
+     * @param artists The objects to represent in the ListView.
+     * @param sizeOfImageToLoad Min reference size for future bitmaps loading
+     */
     public ArtistAdapter(Context context, List<Artist> artists, int sizeOfImageToLoad) {
         this.mArtists = artists;
         this.mContext = context;
@@ -95,11 +110,19 @@ public class ArtistAdapter extends BaseAdapter {
         return view;
     }
 
+    /**
+     * Remove all elements from the list.
+     */
     public void clear(){
         mArtists.clear();
         notifyDataSetChanged();
     }
 
+    /**
+     * Adds the specified Collection at the end of the array.
+     *
+     * @param artists The Collection to add at the end of the array.
+     */
     public void addAll(List<Artist> artists){
         mArtists.addAll(artists);
         notifyDataSetChanged();

@@ -26,18 +26,37 @@ public class SpotifyDatasource {
     private SQLiteDatabase database;
     private SpotifyDB dbHelper;
 
+
+    /**
+     * Constructor
+     *
+     * @param context The current context.
+     */
     public SpotifyDatasource(Context context) {
         dbHelper = new SpotifyDB(context);
     }
 
+    /**
+     * Prepares the Datasource (get an instance of the DB)
+     * @throws SQLException
+     */
     public void open() throws SQLException {
         database= dbHelper.getWritableDatabase();
     }
 
+    /**
+     *  Free the resources of the datasource. Use this method after using your datasource to avoid memory leaks.
+     */
     public void close() {
+        database.close();
         dbHelper.close();
     }
 
+    /**
+     * Returns a boolean that specifies if the top tracks are ever stored in DB for a specific artist ID
+     * @param id The artist ID
+     * @return Boolean that specifies if the top tracks are ever stored in DB for a specific artist ID
+     */
     public boolean isTopTracksInDB(String id){
         boolean exists = false;
 
@@ -50,13 +69,20 @@ public class SpotifyDatasource {
         return exists;
     }
 
-    public TopTracksAdapter createTopTracksCursorAdapter(Context context, String artistID, List<Track> tracks) {
+    /**
+     * Store the top tracks for a specific artist ID. After cleaning up old obsolete data, it returns a TopTracksAdapter to display results
+     * @param context The current context
+     * @param artistId Artist ID that depends the datas
+     * @param tracks The tracks to store
+     * @return TopTracksAdapter that contains rows corresponding to the tracks
+     */
+    public TopTracksAdapter createTopTracksCursorAdapter(Context context, String artistId, List<Track> tracks) {
         long currentTime = Calendar.getInstance().getTimeInMillis();
         for(int i=0;i<tracks.size();i++){
-            insertTopTrack(tracks.get(i),artistID,currentTime);
+            insertTopTrack(tracks.get(i),artistId,currentTime);
         }
         makeDataRotation();
-        return createTopTracksCursorAdapter(context,artistID);
+        return createTopTracksCursorAdapter(context,artistId);
     }
 
     private void makeDataRotation() {
@@ -107,6 +133,11 @@ public class SpotifyDatasource {
         database.insert(SpotifyDB.TOP_TRACKS_TABLE_NAME, null, values);
     }
 
+    /**
+     * Get a TopTracksAdapter to display top tracks that has ever been stored
+     * @param context The current context
+     * @return TopTracksAdapter that contains rows corresponding to the tracks
+     */
     public TopTracksAdapter createTopTracksCursorAdapter(Context context, String artistID) {
         //Cursor is used after in TopTracksAdapter, we can't free it, that explains the suppressLint
         @SuppressLint("Recycle") Cursor cursor = database.query(SpotifyDB.TOP_TRACKS_TABLE_NAME,

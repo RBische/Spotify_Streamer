@@ -103,6 +103,10 @@ public class ArtistSearchFragment extends Fragment {
         outState.putString(ET_SAVED,mEtArtist.getText().toString());
     }
 
+    /**
+     * Search and load for a specified String artists corresponding
+     * @param artist The specified artist
+     */
     private void searchArtist(final String artist){
         if (artist!=null&&!artist.equals("")){
             if (mLoader != null) {

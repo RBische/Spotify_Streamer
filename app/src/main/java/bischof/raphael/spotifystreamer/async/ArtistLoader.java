@@ -18,12 +18,16 @@ import retrofit.RetrofitError;
  * Created by biche on 10/06/2015.
  */
 public class ArtistLoader extends AsyncTask<String, Void, ArtistLoader.Response> {
+    /**
+     * The listener that receives notifications the asynctask finished its work
+     */
     private OnContentLoadedListener<List<Artist>> listener;
 
-    public void setOnContentLoadedListener(OnContentLoadedListener<List<Artist>> listener) {
-        this.listener = listener;
-    }
-
+    /**
+     * Search and loads the artist asynchronously and store it in result
+     * @param params String array in which item at index 0 is considered as the artist's name searched
+     * @return Returns a {@link Response} that contains either the artists or a string explaning the error
+     */
     @Override
     protected ArtistLoader.Response doInBackground(String... params) {
         try {
@@ -51,6 +55,18 @@ public class ArtistLoader extends AsyncTask<String, Void, ArtistLoader.Response>
         }
     }
 
+    /**
+     * Register a callback to be invoked when the asynctask finished its work
+     *
+     * @param listener The callback that will be invoked.
+     */
+    public void setOnContentLoadedListener(OnContentLoadedListener<List<Artist>> listener) {
+        this.listener = listener;
+    }
+
+    /**
+     * Class formatting the AsyncTask result.
+     */
     protected class Response{
         private RetrofitError error;
         private List<Artist> artists;

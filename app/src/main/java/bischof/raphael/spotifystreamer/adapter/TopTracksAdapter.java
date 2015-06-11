@@ -24,6 +24,13 @@ import bischof.raphael.spotifystreamer.picasso.CircleTransform;
  * Created by biche on 10/06/2015.
  */
 public class TopTracksAdapter extends CursorAdapter {
+
+    /**
+     * Constructor
+     *
+     * @param context The current context.
+     * @param cursor The cursor from which to get the data.
+     */
     public TopTracksAdapter(Context context, Cursor cursor) {
         super(context, cursor, 0);
     }
