@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015 Raphaël Bischof
+ */
+
 package bischof.raphael.spotifystreamer.fragment;
 
 import android.content.Intent;
@@ -19,6 +23,7 @@ import bischof.raphael.spotifystreamer.async.TopTracksLoader;
 /**
  * Fragment containing a {@link ListView} to show top tracks.
  * ListView uses an {@link TopTracksAdapter} to display items.
+ * Created by biche on 11/06/2015.
  */
 public class TopTracksActivityFragment extends Fragment {
 

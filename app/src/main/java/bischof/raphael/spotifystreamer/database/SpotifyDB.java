@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015 Raphaël Bischof
+ */
+
 package bischof.raphael.spotifystreamer.database;
 
 import android.content.Context;
@@ -6,6 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 /**
  * ArtistDB let the app store informations about top tracks of artists
+ * Created by biche on 10/06/2015.
  */
 public class SpotifyDB extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;

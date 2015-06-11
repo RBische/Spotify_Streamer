@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015 Raphaël Bischof
+ */
+
 package bischof.raphael.spotifystreamer.fragment;
 
 import android.content.Intent;
@@ -26,6 +30,7 @@ import kaaes.spotify.webapi.android.models.Artist;
 /**
  * Fragment containing the {@link EditText} used to search an artist and a {@link ListView} to show results.
  * ListView uses an {@link ArtistAdapter} to display items.
+ * Created by biche on 10/06/2015.
  */
 public class ArtistSearchFragment extends Fragment {
 
@@ -89,6 +94,7 @@ public class ArtistSearchFragment extends Fragment {
         if (savedInstanceState!=null){
             mEtArtist.setText(savedInstanceState.getString(ET_SAVED));
         }
+        //TODO: Back button restart completely the activity
     }
 
     @Override

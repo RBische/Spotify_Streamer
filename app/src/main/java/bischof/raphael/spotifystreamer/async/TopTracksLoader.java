@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015 Raphaël Bischof
+ */
+
 package bischof.raphael.spotifystreamer.async;
 
 import android.content.Context;
@@ -17,6 +21,7 @@ import retrofit.RetrofitError;
 /**
  * Search/loads/store top tracks of a specified artist.
  * Needs a context to achieve the maximum of work in the background task to avoid UI freeze (like storing top tracks in DB,clean old datas, etc...)
+ * Created by biche on 11/06/2015.
  */
 public class TopTracksLoader extends AsyncTask<String, Void, TopTracksLoader.Response> {
     private Context mContext;

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015 Raphaël Bischof
+ */
+
 package bischof.raphael.spotifystreamer.database;
 
 import android.annotation.SuppressLint;
@@ -15,6 +19,7 @@ import kaaes.spotify.webapi.android.models.Track;
 
 /**
  * Makes CRUD operations on SpotifyDB
+ * Created by biche on 10/06/2015.
  */
 public class SpotifyDatasource {
     private static final int ITEMS_COUNT_STORED = 5;

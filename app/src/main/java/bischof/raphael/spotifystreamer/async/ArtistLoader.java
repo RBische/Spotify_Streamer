@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015 Raphaël Bischof
+ */
+
 package bischof.raphael.spotifystreamer.async;
 
 import android.os.AsyncTask;
@@ -11,6 +15,7 @@ import retrofit.RetrofitError;
 
 /**
  * Search and loads the artists from a string
+ * Created by biche on 10/06/2015.
  */
 public class ArtistLoader extends AsyncTask<String, Void, ArtistLoader.Response> {
     private OnContentLoadedListener<List<Artist>> listener;

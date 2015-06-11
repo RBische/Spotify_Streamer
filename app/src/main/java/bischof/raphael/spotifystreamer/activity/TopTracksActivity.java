@@ -1,3 +1,6 @@
+/*
+ * Copyright (C) 2015 Raphaël Bischof
+ */
 package bischof.raphael.spotifystreamer.activity;
 
 import android.os.Bundle;
@@ -6,6 +9,10 @@ import android.view.Menu;
 
 import bischof.raphael.spotifystreamer.R;
 
+/*
+ * Activity containing TopTracksFragment
+ * Created by biche on 11/06/2015.
+ */
 public class TopTracksActivity extends AppCompatActivity {
 
     @Override
