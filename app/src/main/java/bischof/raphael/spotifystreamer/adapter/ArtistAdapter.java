@@ -102,11 +102,13 @@ public class ArtistAdapter extends BaseAdapter {
                 imageUrl = artist.images.get(indexKeeped).url;
             }
         }
-        Picasso.with(mContext)
-                .load(imageUrl)
-                .transform(new CircleTransform())
-                .placeholder(R.drawable.ic_cd_placeholder)
-                .into(ivThumb);
+        if (imageUrl!=null){
+            Picasso.with(mContext)
+                    .load(imageUrl)
+                    .transform(new CircleTransform())
+                    .placeholder(R.drawable.ic_cd_placeholder)
+                    .into(ivThumb);
+        }
         return view;
     }
 

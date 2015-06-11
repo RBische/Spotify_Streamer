@@ -48,8 +48,10 @@ public class TopTracksAdapter extends CursorAdapter {
         tvAlbum.setText(cursor.getString(cursor.getColumnIndexOrThrow(SpotifyDB.KEY_TOP_TRACKS_ALBUM)));
         ImageView imageView = (ImageView)view.findViewById(R.id.ivThumb);
         String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow(SpotifyDB.KEY_TOP_TRACKS_ALBUM_IMAGE_URL));
-        Picasso.with(context).load(imageUrl)
-                .transform(new CircleTransform())
-                .placeholder(R.drawable.ic_cd_placeholder).into(imageView);
+        if (imageUrl!=null){
+            Picasso.with(context).load(imageUrl)
+                    .transform(new CircleTransform())
+                    .placeholder(R.drawable.ic_cd_placeholder).into(imageView);
+        }
     }
 }
