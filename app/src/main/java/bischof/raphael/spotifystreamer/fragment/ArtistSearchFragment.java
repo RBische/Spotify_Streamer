@@ -94,7 +94,6 @@ public class ArtistSearchFragment extends Fragment {
         if (savedInstanceState!=null){
             mEtArtist.setText(savedInstanceState.getString(ET_SAVED));
         }
-        //TODO: Back button restart completely the activity
     }
 
     @Override
