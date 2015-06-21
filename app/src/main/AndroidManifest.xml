@@ -4,6 +4,8 @@
 
     <!-- Permission used for Spotify Web API Wrapper -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Permission used for MediaPlayer, avoid device to sleep while playing -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
@@ -22,10 +24,14 @@
         <activity
             android:name=".activity.TopTracksActivity"
             android:label="@string/title_activity_top_tracks"
-            android:parentActivityName="bischof.raphael.spotifystreamer.activity.HomeActivity" >
+            android:parentActivityName=".activity.HomeActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="bischof.raphael.spotifystreamer.activity.HomeActivity" />
+        </activity>
+        <activity
+            android:name=".activity.StreamingActivity"
+            android:label="@string/app_name" >
         </activity>
     </application>
 

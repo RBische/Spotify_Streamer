@@ -13,12 +13,14 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
 import bischof.raphael.spotifystreamer.R;
+import bischof.raphael.spotifystreamer.activity.StreamingActivity;
 import bischof.raphael.spotifystreamer.adapter.TopTracksAdapter;
 import bischof.raphael.spotifystreamer.async.OnContentLoadedListener;
 import bischof.raphael.spotifystreamer.async.TopTracksLoader;
@@ -31,7 +33,7 @@ import butterknife.InjectView;
  * ListView uses an {@link TopTracksAdapter} to display items.
  * Created by biche on 11/06/2015.
  */
-public class TopTracksActivityFragment extends Fragment {
+public class TopTracksActivityFragment extends Fragment implements AdapterView.OnItemClickListener {
 
     private static final String LOG_TAG = TopTracksActivityFragment.class.getSimpleName();
     private static final String LV_SAVED = "LvItemsToSave";
@@ -63,6 +65,7 @@ public class TopTracksActivityFragment extends Fragment {
             mLvTopTracks.setAdapter(mLvTopTracksAdapter);
             searchTopTracks();
         }
+        mLvTopTracks.setOnItemClickListener(this);
         return v;
     }
 
@@ -126,5 +129,13 @@ public class TopTracksActivityFragment extends Fragment {
             }
         });
         loader.execute(getActivity().getIntent().getStringExtra(Intent.EXTRA_TEXT));
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        ParcelableTrack track = mLvTopTracksAdapter.getItem(position);
+        Intent intent = new Intent(getActivity(), StreamingActivity.class);
+        intent.putExtra(StreamingActivity.EXTRA_PREVIEW_URL,track.getPreviewUrl());
+        startActivity(intent);
     }
 }

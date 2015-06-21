@@ -122,4 +122,8 @@ public class ParcelableTrack implements Parcelable {
     public String getImageUrlSmall() {
         return imageUrlSmall;
     }
+
+    public String getPreviewUrl() {
+        return previewUrl;
+    }
 }

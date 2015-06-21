@@ -7,4 +7,8 @@
     <string name="connection_needed">No connection available</string>
     <string name="refine_search">Please refine search, no results found</string>
     <string name="no_top_tracks">No top tracks for this artist !</string>
+    <string name="album_thumbnail">Thumbnail of the album</string>
+    <string name="previous">Previous button</string>
+    <string name="next">Next button</string>
+    <string name="play_pause">Play Pause button</string>
 </resources>
