@@ -13,5 +13,5 @@
     <string name="play_pause">Play Pause button</string>
     <string name="title_activity_now_playing">Now playing</string>
     <string name="now_playing">Now playing....</string>
-    <string name="format_time"><xliff:g id="min">%1$s</xliff:g>:<xliff:g id="sec">%2$s</xliff:g></string>
+    <string name="format_time" translatable="false"><xliff:g id="min">%1$02d</xliff:g>:<xliff:g id="sec">%2$02d</xliff:g></string>
 </resources>
