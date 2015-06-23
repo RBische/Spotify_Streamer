@@ -133,9 +133,9 @@ public class TopTracksActivityFragment extends Fragment implements AdapterView.O
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        ParcelableTrack track = mLvTopTracksAdapter.getItem(position);
         Intent intent = new Intent(getActivity(), StreamingActivity.class);
-        intent.putExtra(StreamingActivity.EXTRA_PREVIEW_URL,track.getPreviewUrl());
+        intent.putParcelableArrayListExtra(StreamingFragment.EXTRA_TOP_TRACKS,mLvTopTracksAdapter.getTracks());
+        intent.putExtra(StreamingFragment.EXTRA_TOP_TRACK_SELECTED,position);
         startActivity(intent);
     }
 }

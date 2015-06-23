@@ -1,21 +1,39 @@
 package bischof.raphael.spotifystreamer.activity;
 
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.util.ArrayList;
+
 import bischof.raphael.spotifystreamer.R;
+import bischof.raphael.spotifystreamer.fragment.StreamingFragment;
+import bischof.raphael.spotifystreamer.model.ParcelableTrack;
 
 public class StreamingActivity extends AppCompatActivity {
-
-    public static final String EXTRA_PREVIEW_URL = "PreviewUrl";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_streaming);
+        if (savedInstanceState == null) {
+            // The detail Activity called via intent.  Inspect the intent for forecast data.
+            Intent intent = getIntent();
+            if (intent != null) {
+                Bundle args = new Bundle();
+                ArrayList<ParcelableTrack> tracks = intent.getParcelableArrayListExtra(StreamingFragment.EXTRA_TOP_TRACKS);
+                args.putParcelableArrayList(StreamingFragment.EXTRA_TOP_TRACKS, tracks);
+                args.putInt(StreamingFragment.EXTRA_TOP_TRACK_SELECTED, intent.getIntExtra(StreamingFragment.EXTRA_TOP_TRACK_SELECTED,0));
+                StreamingFragment fragment = new StreamingFragment();
+                fragment.setArguments(args);
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.container, fragment).commit();
+            }
+
+        }
     }
 
 
