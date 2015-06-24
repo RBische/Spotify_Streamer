@@ -25,6 +25,7 @@ import bischof.raphael.spotifystreamer.adapter.TopTracksAdapter;
 import bischof.raphael.spotifystreamer.async.OnContentLoadedListener;
 import bischof.raphael.spotifystreamer.async.TopTracksLoader;
 import bischof.raphael.spotifystreamer.model.ParcelableTrack;
+import bischof.raphael.spotifystreamer.service.StreamerService;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
@@ -67,6 +68,17 @@ public class TopTracksActivityFragment extends Fragment implements AdapterView.O
         }
         mLvTopTracks.setOnItemClickListener(this);
         return v;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (getActivity().getIntent().getAction()!=null&&getActivity().getIntent().getAction().equals(StreamerService.ACTION_SHOW_UI_FROM_SONG)&&savedInstanceState==null){
+            ArrayList<ParcelableTrack> tracks = getActivity().getIntent().getParcelableArrayListExtra(StreamerService.EXTRA_TOP_TRACKS);
+            mLvTopTracksAdapter = new TopTracksAdapter(getActivity(),tracks);
+            mLvTopTracks.setAdapter(mLvTopTracksAdapter);
+            showPlayer(getActivity().getIntent().getIntExtra(StreamerService.EXTRA_TOP_TRACK_SELECTED,0));
+        }
     }
 
     @Override
@@ -133,6 +145,10 @@ public class TopTracksActivityFragment extends Fragment implements AdapterView.O
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        showPlayer(position);
+    }
+
+    private void showPlayer(int position) {
         Intent intent = new Intent(getActivity(), StreamingActivity.class);
         intent.putParcelableArrayListExtra(StreamingFragment.EXTRA_TOP_TRACKS,mLvTopTracksAdapter.getTracks());
         intent.putExtra(StreamingFragment.EXTRA_TOP_TRACK_SELECTED,position);

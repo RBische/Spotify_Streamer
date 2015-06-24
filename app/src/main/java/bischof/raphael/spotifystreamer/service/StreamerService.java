@@ -20,6 +20,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.squareup.picasso.Picasso;
 
@@ -30,6 +31,7 @@ import java.util.concurrent.ExecutionException;
 import bischof.raphael.spotifystreamer.R;
 import bischof.raphael.spotifystreamer.activity.HomeActivity;
 import bischof.raphael.spotifystreamer.model.ParcelableTrack;
+import kaaes.spotify.webapi.android.models.Track;
 
 /**
  * Service that stream the music from a specified track list
@@ -37,21 +39,24 @@ import bischof.raphael.spotifystreamer.model.ParcelableTrack;
  * Created by biche on 22/06/2015.
  */
 public class StreamerService extends Service implements MediaPlayer.OnPreparedListener,MediaPlayer.OnCompletionListener {
+    private static final String LOG_TAG = StreamerService.class.getSimpleName();
     // Binder given to clients
     private final IBinder mBinder = new StreamerBinder();
 
     private OnStreamerStateChangeListener mListener;
 
+    public static final String ACTION_SHOW_UI_FROM_SONG = "ShowUIFromSong";
     public static final String ACTION_TOGGLE_PLAY_PAUSE = "TogglePlayPause";
     public static final String ACTION_TOGGLE_NOTIFICATION = "ToggleNotification";
     public static final String ACTION_NEXT_SONG = "NextSong";
-    public static final String ACTION_PREVIOUS_SONG = "NextSong";
+    public static final String ACTION_PREVIOUS_SONG = "PreviousSong";
     public static final String ACTION_LOAD_SONG = "LoadSong";
     public static final String EXTRA_TOP_TRACKS = "ExtraTopTracks";
     public static final String EXTRA_TOP_TRACK_SELECTED = "ExtraTopTrackSelected";
     private static final int NOTIFICATION_ID = 668;
     private MediaPlayer mMediaPlayer;
     private boolean mPlayerPrepared = false;
+    private boolean mPlayerPreparing = false;
     private boolean mNotificationShown = true;
     private ArrayList<ParcelableTrack> mTopTracks;
     private int mTopTrackSelected;
@@ -66,7 +71,7 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
     }
 
     public boolean isPlaying() {
-        return mMediaPlayer.isPlaying();
+        return mMediaPlayer != null && mMediaPlayer.isPlaying();
     }
 
     public void seekTo(int progress) {
@@ -96,10 +101,9 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
             if (intent.getAction()!=null){
                 if (intent.getAction().equals(ACTION_LOAD_SONG)){
                     //Getting the extras
-                    mPlayerPrepared = false;
-                    this.mTopTracks = intent.getParcelableArrayListExtra(EXTRA_TOP_TRACKS);
-                    this.mTopTrackSelected = intent.getIntExtra(EXTRA_TOP_TRACK_SELECTED,0);
-                    loadSong();
+                    ArrayList<ParcelableTrack> tracks = intent.getParcelableArrayListExtra(EXTRA_TOP_TRACKS);
+                    int currentPosition = intent.getIntExtra(EXTRA_TOP_TRACK_SELECTED,0);
+                    loadSong(tracks,currentPosition);
                 }else if (intent.getAction().equals(ACTION_TOGGLE_PLAY_PAUSE)){
                     togglePlayPause();
                 }else if (intent.getAction().equals(ACTION_TOGGLE_NOTIFICATION)){
@@ -134,6 +138,18 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         return super.onStartCommand(intent, flags, startId);
     }
 
+    public void loadSong(ArrayList<ParcelableTrack> tracks, int currentPosition) {
+        boolean needsToLoadSong = false;
+        if (mTopTracks==null||!mTopTracks.get(mTopTrackSelected).getPreviewUrl().equals(tracks.get(currentPosition).getPreviewUrl())){
+            needsToLoadSong = true;
+        }
+        this.mTopTracks = tracks;
+        this.mTopTrackSelected = currentPosition;
+        if(needsToLoadSong){
+            loadSong();
+        }
+    }
+
     public void togglePlayPause() {
         if (mPlayerPrepared){
             if(mMediaPlayer.isPlaying()){
@@ -144,10 +160,15 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
             if(mNotificationShown){
                 showNotification();
             }
+        }else{
+            if (!mPlayerPreparing){
+                loadSong();
+            }
         }
     }
 
     private void loadSong() {
+        mPlayerPrepared = false;
         //Initializing the MediaPlayer
         String url = mTopTracks.get(mTopTrackSelected).getPreviewUrl();
         if (mMediaPlayer!=null){
@@ -160,9 +181,11 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         try {
             mMediaPlayer.setDataSource(url);
         } catch (IOException | IllegalArgumentException e) {
-            //TODO: fill exception
+            //Should never be raised
+            Log.d(LOG_TAG,e.getMessage());
         }
         mMediaPlayer.setOnPreparedListener(this);
+        this.mPlayerPreparing = true;
         mMediaPlayer.prepareAsync();
     }
 
@@ -172,10 +195,14 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
 
     private void showNotification(boolean forceShowIsPlaying) {
         ParcelableTrack currentTrack = mTopTracks.get(mTopTrackSelected);
-
-        PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0,
-                new Intent(getApplicationContext(), HomeActivity.class),
-                PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intentStreamingUI = new Intent(getBaseContext(), HomeActivity.class);
+        intentStreamingUI.setAction(ACTION_SHOW_UI_FROM_SONG);
+        intentStreamingUI.putExtra(EXTRA_TOP_TRACK_SELECTED,mTopTrackSelected);
+        intentStreamingUI.putExtra(EXTRA_TOP_TRACKS,mTopTracks);
+        intentStreamingUI.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        PendingIntent pi = PendingIntent.getActivity(getBaseContext(), 0,
+                intentStreamingUI,
+                PendingIntent.FLAG_CANCEL_CURRENT);
         Intent intentPrevious = new Intent(getApplicationContext(), StreamerService.class);
         intentPrevious.setAction(ACTION_PREVIOUS_SONG);
         PendingIntent previousPendingIntent = PendingIntent.getService(getApplicationContext(), 0,
@@ -251,13 +278,14 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
                                     .error(R.drawable.ic_cd_placeholder)
                                     .get();
                         } catch (IOException e) {
-                            //TODO: Fill exception
+                            //Can be raised only if Spotify's wrapper provides a wrong URL
+                            Log.d(LOG_TAG,e.getMessage());
                         }
                         return null;
                     }
                 }.execute().get();
             } catch (InterruptedException | ExecutionException e) {
-                //TODO: Fill exception
+                Log.d(LOG_TAG,e.getMessage());
             }
             if(builder!=null){
                 if (contactPic != null) {
@@ -295,6 +323,7 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
 
     @Override
     public void onPrepared(MediaPlayer mp) {
+        mPlayerPreparing = false;
         mPlayerPrepared = true;
         mp.start();
         mp.setOnCompletionListener(this);
@@ -319,7 +348,7 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
     }
 
     public interface OnStreamerStateChangeListener{
-        public void onPlaying(int duration);
-        public void onPlayEnding();
+        void onPlaying(int duration);
+        void onPlayEnding();
     }
 }

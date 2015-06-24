@@ -26,6 +26,8 @@ import bischof.raphael.spotifystreamer.adapter.ArtistAdapter;
 import bischof.raphael.spotifystreamer.async.ArtistLoader;
 import bischof.raphael.spotifystreamer.async.OnContentLoadedListener;
 import bischof.raphael.spotifystreamer.model.ParcelableArtist;
+import bischof.raphael.spotifystreamer.model.ParcelableTrack;
+import bischof.raphael.spotifystreamer.service.StreamerService;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
@@ -85,13 +87,44 @@ public class ArtistSearchFragment extends Fragment {
         mLvArtist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent i = new Intent(getActivity(), TopTracksActivity.class);
-                i.putExtra(Intent.EXTRA_TEXT, mLvArtistAdapter.getItem(position).getId());
-                i.putExtra(Intent.EXTRA_TITLE, mLvArtistAdapter.getItem(position).getName());
-                startActivity(i);
+                showTopTracks(mLvArtistAdapter.getItem(position).getName(), mLvArtistAdapter.getItem(position).getId());
             }
         });
         return v;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (getActivity().getIntent().getAction().equals(StreamerService.ACTION_SHOW_UI_FROM_SONG)&&savedInstanceState==null){
+            ArrayList<ParcelableTrack> tracks = getActivity().getIntent().getParcelableArrayListExtra(StreamerService.EXTRA_TOP_TRACKS);
+            int topTrackSelected = getActivity().getIntent().getIntExtra(StreamerService.EXTRA_TOP_TRACK_SELECTED,0);
+            String artist = null;
+            String artistID = null;
+            if (tracks.size()>topTrackSelected){
+                artist = tracks.get(0).getArtist();
+                artistID = tracks.get(0).getArtistId();
+            }
+            mEtArtist.setText(artist);
+            showTopTracksEverLoaded(artist,artistID,tracks,topTrackSelected);
+        }
+    }
+
+    private void showTopTracks(String name, String id) {
+        Intent i = new Intent(getActivity(), TopTracksActivity.class);
+        i.putExtra(Intent.EXTRA_TEXT,id);
+        i.putExtra(Intent.EXTRA_TITLE, name);
+        startActivity(i);
+    }
+
+    private void showTopTracksEverLoaded(String name, String id, ArrayList<ParcelableTrack> tracks, int topTrackSelected){
+        Intent i = new Intent(getActivity(), TopTracksActivity.class);
+        i.setAction(StreamerService.ACTION_SHOW_UI_FROM_SONG);
+        i.putExtra(Intent.EXTRA_TEXT,id);
+        i.putExtra(Intent.EXTRA_TITLE, name);
+        i.putExtra(StreamerService.EXTRA_TOP_TRACK_SELECTED,topTrackSelected);
+        i.putExtra(StreamerService.EXTRA_TOP_TRACKS,tracks);
+        startActivity(i);
     }
 
     @Override

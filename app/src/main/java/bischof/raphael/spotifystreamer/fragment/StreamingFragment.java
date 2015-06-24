@@ -47,6 +47,7 @@ public class StreamingFragment extends Fragment implements View.OnClickListener,
     private ArrayList<ParcelableTrack> mTopTracks;
     private int mTopTrackSelected;
     private boolean mIsPlaying = true;
+    private boolean mMustLoadSong =false;
 
     private StreamerService mService;
     private boolean mBound = false;
@@ -74,11 +75,7 @@ public class StreamingFragment extends Fragment implements View.OnClickListener,
         if (savedInstanceState==null){
             this.mTopTracks = getArguments().getParcelableArrayList(EXTRA_TOP_TRACKS);
             this.mTopTrackSelected = getArguments().getInt(EXTRA_TOP_TRACK_SELECTED);
-            Intent intent = new Intent(getActivity(), StreamerService.class);
-            intent.setAction(StreamerService.ACTION_LOAD_SONG);
-            intent.putExtra(StreamerService.EXTRA_TOP_TRACKS,this.mTopTracks);
-            intent.putExtra(StreamerService.EXTRA_TOP_TRACK_SELECTED,this.mTopTrackSelected);
-            getActivity().startService(intent);
+            mMustLoadSong = true;
         }else{
             this.mTopTracks = savedInstanceState.getParcelableArrayList(EXTRA_TOP_TRACKS);
             this.mTopTrackSelected = savedInstanceState.getInt(EXTRA_TOP_TRACK_SELECTED);
@@ -87,6 +84,9 @@ public class StreamingFragment extends Fragment implements View.OnClickListener,
     }
 
     private void fillUI() {
+        mSbTrack.setProgress(0);
+        mTvCurrentTime.setText("");
+        mTvDuration.setText("");
         ParcelableTrack track = mTopTracks.get(mTopTrackSelected);
         mTvArtist.setText(track.getArtist());
         Picasso.with(getActivity())
@@ -108,6 +108,10 @@ public class StreamingFragment extends Fragment implements View.OnClickListener,
             listenPlayerState();
             mService.hideNotification();
             mBound = true;
+            if(mMustLoadSong){
+                mMustLoadSong =false;
+                mService.loadSong(mTopTracks,mTopTrackSelected);
+            }
         }
 
         @Override
@@ -117,9 +121,10 @@ public class StreamingFragment extends Fragment implements View.OnClickListener,
     };
 
     private void listenPlayerState() {
-        if (!mService.isPlayerPrepared()){
-            mService.setOnStreamerStateChangeListener(StreamingFragment.this);
-        }else{
+        mService.setOnStreamerStateChangeListener(StreamingFragment.this);
+        if (!mService.isPlaying()&&mService.isPlayerPrepared()){
+            onPlayEnding();
+        }else if(mService.isPlayerPrepared()){
             onPlaying(mService.getDuration());
         }
     }
@@ -218,6 +223,8 @@ public class StreamingFragment extends Fragment implements View.OnClickListener,
     @Override
     public void onPlayEnding() {
         mIsPlaying=false;
+        mSbTrack.setProgress(0);
+        mTvCurrentTime.setText(formatTime(0));
         mIbPlayPause.setImageResource(android.R.drawable.ic_media_play);
     }
 
