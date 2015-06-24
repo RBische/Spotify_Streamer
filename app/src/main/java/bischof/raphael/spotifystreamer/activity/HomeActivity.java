@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
+import android.view.MenuItem;
 
 import java.util.ArrayList;
 
@@ -15,6 +16,7 @@ import bischof.raphael.spotifystreamer.fragment.ArtistSearchFragment;
 import bischof.raphael.spotifystreamer.fragment.StreamingFragment;
 import bischof.raphael.spotifystreamer.fragment.TopTracksActivityFragment;
 import bischof.raphael.spotifystreamer.model.ParcelableTrack;
+import bischof.raphael.spotifystreamer.service.ServiceTools;
 import bischof.raphael.spotifystreamer.service.StreamerService;
 
 /*
@@ -41,7 +43,28 @@ public class HomeActivity extends AppCompatActivity implements ArtistSearchFragm
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_home, menu);
+        MenuItem item = menu.findItem(R.id.action_now_playing);
+        item.setVisible(ServiceTools.isServiceRunning(this,StreamerService.class.getName()));
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            startActivity(new Intent(this, PreferenceActivity.class));
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        invalidateOptionsMenu();
     }
 
     @Override

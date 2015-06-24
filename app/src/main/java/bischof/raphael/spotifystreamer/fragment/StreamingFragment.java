@@ -70,6 +70,7 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
         mIbPlayPause.setOnClickListener(this);
         mIbNext.setOnClickListener(this);
         mSbTrack.setOnSeekBarChangeListener(this);
+        //TODO: There is a bug if fragment is shown in dialog, button play/pause shows play button although it must be showing pause button
         return view;
     }
 

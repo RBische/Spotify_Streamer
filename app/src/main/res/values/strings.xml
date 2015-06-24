@@ -14,4 +14,20 @@
     <string name="title_activity_now_playing">Now playing</string>
     <string name="now_playing">Now playing....</string>
     <string name="format_time" translatable="false"><xliff:g id="min">%1$02d</xliff:g>:<xliff:g id="sec">%2$02d</xliff:g></string>
+    <string name="action_now_playing">Now playing...</string>
+    <string name="title_activity_preference">PreferenceActivity</string>
+    <string name="pref_country_code_default" translatable="false" />
+    <string name="pref_country_code_key" translatable="false">country_code</string>
+    <string name="pref_country_code_label">Pick your country</string>
+
+    <string-array name="pref_country_code_values" translatable="false">
+        <item>France</item>
+        <item>USA</item>
+        <item>United Kingdom</item>
+    </string-array>
+    <string-array name="pref_country_code_keys" translatable="false">
+        <item>fr</item>
+        <item>us</item>
+        <item>uk</item>
+    </string-array>
 </resources>
