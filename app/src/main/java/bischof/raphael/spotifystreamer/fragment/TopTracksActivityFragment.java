@@ -4,6 +4,7 @@
 
 package bischof.raphael.spotifystreamer.fragment;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -38,8 +39,12 @@ public class TopTracksActivityFragment extends Fragment implements AdapterView.O
 
     private static final String LOG_TAG = TopTracksActivityFragment.class.getSimpleName();
     private static final String LV_SAVED = "LvItemsToSave";
+    public static final String ARG_TITLE = "Title";
+    public static final String ARG_MUST_FILL_UI_WITH_DATAS = "FillUIXWithDatas";
+    public static final String ARG_ARTIST_ID = "ArtistName";
     private TopTracksAdapter mLvTopTracksAdapter;
     private Toast mToast;
+    private Callbacks mCallbacks;
     @InjectView(R.id.lvTopTracks) ListView mLvTopTracks;
 
     public TopTracksActivityFragment() {
@@ -50,7 +55,7 @@ public class TopTracksActivityFragment extends Fragment implements AdapterView.O
         super.onCreate(savedInstanceState);
         AppCompatActivity activity = ((AppCompatActivity)getActivity());
         ActionBar actionBar = activity.getSupportActionBar();
-        String title = getActivity().getIntent().getStringExtra(Intent.EXTRA_TITLE);
+        String title = getArguments().getString(ARG_TITLE);
         if(actionBar!=null)
         actionBar.setSubtitle(title);
     }
@@ -73,11 +78,19 @@ public class TopTracksActivityFragment extends Fragment implements AdapterView.O
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if (getActivity().getIntent().getAction()!=null&&getActivity().getIntent().getAction().equals(StreamerService.ACTION_SHOW_UI_FROM_SONG)&&savedInstanceState==null){
-            ArrayList<ParcelableTrack> tracks = getActivity().getIntent().getParcelableArrayListExtra(StreamerService.EXTRA_TOP_TRACKS);
+        if (getArguments().getBoolean(ARG_MUST_FILL_UI_WITH_DATAS)&&savedInstanceState==null){
+            ArrayList<ParcelableTrack> tracks = getArguments().getParcelableArrayList(StreamerService.EXTRA_TOP_TRACKS);
             mLvTopTracksAdapter = new TopTracksAdapter(getActivity(),tracks);
             mLvTopTracks.setAdapter(mLvTopTracksAdapter);
-            showPlayer(getActivity().getIntent().getIntExtra(StreamerService.EXTRA_TOP_TRACK_SELECTED,0));
+            showPlayer(getArguments().getInt(StreamerService.EXTRA_TOP_TRACK_SELECTED, 0));
+        }
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if(activity instanceof Callbacks){
+            mCallbacks = (Callbacks) activity;
         }
     }
 
@@ -98,7 +111,7 @@ public class TopTracksActivityFragment extends Fragment implements AdapterView.O
     }
 
     /**
-     * Search and load top tracks for an artist specified in Intent.EXTRA_TEXT
+     * Search and load top tracks for an artist specified in ARG_ARTIST_ID
      */
     private void searchTopTracks() {
         //Get the size of desired bitmap to know which image to load in ImageView later
@@ -140,7 +153,7 @@ public class TopTracksActivityFragment extends Fragment implements AdapterView.O
                 }
             }
         });
-        loader.execute(getActivity().getIntent().getStringExtra(Intent.EXTRA_TEXT));
+        loader.execute(getArguments().getString(ARG_ARTIST_ID));
     }
 
     @Override
@@ -149,9 +162,12 @@ public class TopTracksActivityFragment extends Fragment implements AdapterView.O
     }
 
     private void showPlayer(int position) {
-        Intent intent = new Intent(getActivity(), StreamingActivity.class);
-        intent.putParcelableArrayListExtra(StreamingFragment.EXTRA_TOP_TRACKS,mLvTopTracksAdapter.getTracks());
-        intent.putExtra(StreamingFragment.EXTRA_TOP_TRACK_SELECTED,position);
-        startActivity(intent);
+        if(mCallbacks!=null){
+            mCallbacks.onAskToShowPlayer(mLvTopTracksAdapter.getTracks(),position);
+        }
+    }
+
+    public interface Callbacks {
+        void onAskToShowPlayer(ArrayList<ParcelableTrack> tracks, int topTrackSelected);
     }
 }

@@ -4,6 +4,7 @@
 
 package bischof.raphael.spotifystreamer.fragment;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -49,8 +50,17 @@ public class ArtistSearchFragment extends Fragment {
     private ArtistLoader mLoader;
     private Toast mToast;
     private boolean mTriggerTextChange = true;
+    private Callbacks mCallbacks;
 
     public ArtistSearchFragment() {
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if(activity instanceof Callbacks){
+            mCallbacks = (Callbacks) activity;
+        }
     }
 
     @Override
@@ -106,25 +116,20 @@ public class ArtistSearchFragment extends Fragment {
                 artistID = tracks.get(0).getArtistId();
             }
             mEtArtist.setText(artist);
-            showTopTracksEverLoaded(artist,artistID,tracks,topTrackSelected);
+            showTopTracksEverLoaded(artist, artistID, tracks, topTrackSelected);
         }
     }
 
     private void showTopTracks(String name, String id) {
-        Intent i = new Intent(getActivity(), TopTracksActivity.class);
-        i.putExtra(Intent.EXTRA_TEXT,id);
-        i.putExtra(Intent.EXTRA_TITLE, name);
-        startActivity(i);
+        if(mCallbacks!=null){
+            mCallbacks.onAskToShowDetailFragment(name,id,null,0);
+        }
     }
 
     private void showTopTracksEverLoaded(String name, String id, ArrayList<ParcelableTrack> tracks, int topTrackSelected){
-        Intent i = new Intent(getActivity(), TopTracksActivity.class);
-        i.setAction(StreamerService.ACTION_SHOW_UI_FROM_SONG);
-        i.putExtra(Intent.EXTRA_TEXT,id);
-        i.putExtra(Intent.EXTRA_TITLE, name);
-        i.putExtra(StreamerService.EXTRA_TOP_TRACK_SELECTED,topTrackSelected);
-        i.putExtra(StreamerService.EXTRA_TOP_TRACKS,tracks);
-        startActivity(i);
+        if(mCallbacks!=null){
+            mCallbacks.onAskToShowDetailFragment(name,id,tracks,topTrackSelected);
+        }
     }
 
     @Override
@@ -200,5 +205,9 @@ public class ArtistSearchFragment extends Fragment {
             });
             mLoader.execute(artist);
         }
+    }
+//TODO: Show selected element
+    public interface Callbacks {
+        void onAskToShowDetailFragment(String name, String id, ArrayList<ParcelableTrack> tracks, int topTrackSelected);
     }
 }

@@ -10,18 +10,42 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.util.ArrayList;
+
 import bischof.raphael.spotifystreamer.R;
+import bischof.raphael.spotifystreamer.fragment.StreamingFragment;
+import bischof.raphael.spotifystreamer.fragment.TopTracksActivityFragment;
+import bischof.raphael.spotifystreamer.model.ParcelableTrack;
+import bischof.raphael.spotifystreamer.service.StreamerService;
 
 /*
  * Activity containing TopTracksFragment
  * Created by biche on 11/06/2015.
  */
-public class TopTracksActivity extends AppCompatActivity {
+public class TopTracksActivity extends AppCompatActivity implements TopTracksActivityFragment.Callbacks {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_top_tracks);
+        // The detail Activity called via intent.  Inspect the intent for forecast data.
+        Intent intent = getIntent();
+        if (intent != null) {
+            Bundle args = new Bundle();
+            args.putString(TopTracksActivityFragment.ARG_TITLE,getIntent().getStringExtra(Intent.EXTRA_TITLE));
+            args.putString(TopTracksActivityFragment.ARG_ARTIST_ID,getIntent().getStringExtra(Intent.EXTRA_TEXT));
+            boolean mustFillUI = getIntent().getAction()!=null&&getIntent().getAction().equals(StreamerService.ACTION_SHOW_UI_FROM_SONG);
+            args.putBoolean(TopTracksActivityFragment.ARG_MUST_FILL_UI_WITH_DATAS, mustFillUI);
+            if (mustFillUI){
+                ArrayList<ParcelableTrack> tracks = intent.getParcelableArrayListExtra(StreamingFragment.EXTRA_TOP_TRACKS);
+                args.putParcelableArrayList(StreamingFragment.EXTRA_TOP_TRACKS, tracks);
+                args.putInt(StreamingFragment.EXTRA_TOP_TRACK_SELECTED, intent.getIntExtra(StreamingFragment.EXTRA_TOP_TRACK_SELECTED,0));
+            }
+            TopTracksActivityFragment fragment = new TopTracksActivityFragment();
+            fragment.setArguments(args);
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.container, fragment).commit();
+        }
     }
 
 
@@ -43,5 +67,13 @@ public class TopTracksActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onAskToShowPlayer(ArrayList<ParcelableTrack> tracks, int topTrackSelected) {
+        Intent intent = new Intent(this, StreamingActivity.class);
+        intent.putParcelableArrayListExtra(StreamingFragment.EXTRA_TOP_TRACKS,tracks);
+        intent.putExtra(StreamingFragment.EXTRA_TOP_TRACK_SELECTED,topTrackSelected);
+        startActivity(intent);
     }
 }

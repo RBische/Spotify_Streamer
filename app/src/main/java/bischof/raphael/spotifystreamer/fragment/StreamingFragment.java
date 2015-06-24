@@ -1,16 +1,20 @@
 package bischof.raphael.spotifystreamer.fragment;
 
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -29,7 +33,7 @@ import butterknife.InjectView;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class StreamingFragment extends Fragment implements View.OnClickListener,StreamerService.OnStreamerStateChangeListener,SeekBar.OnSeekBarChangeListener {
+public class StreamingFragment extends DialogFragment implements View.OnClickListener,StreamerService.OnStreamerStateChangeListener,SeekBar.OnSeekBarChangeListener {
 
     public static final String EXTRA_TOP_TRACKS = "ExtraTopTracks";
     public static final String EXTRA_TOP_TRACK_SELECTED = "ExtraTopTrackSelected";
@@ -67,6 +71,15 @@ public class StreamingFragment extends Fragment implements View.OnClickListener,
         mIbNext.setOnClickListener(this);
         mSbTrack.setOnSeekBarChangeListener(this);
         return view;
+    }
+
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        // request a window without the title
+        if (dialog.getWindow()!=null) dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        return dialog;
     }
 
     @Override
