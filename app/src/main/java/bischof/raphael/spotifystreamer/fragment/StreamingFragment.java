@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -24,6 +25,7 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 
 import bischof.raphael.spotifystreamer.R;
+import bischof.raphael.spotifystreamer.activity.StreamingActivity;
 import bischof.raphael.spotifystreamer.model.ParcelableTrack;
 import bischof.raphael.spotifystreamer.service.StreamerService;
 import butterknife.ButterKnife;
@@ -46,6 +48,7 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
     @InjectView(R.id.ibPrevious) ImageButton mIbPrevious;
     @InjectView(R.id.ibPlayPause) ImageButton mIbPlayPause;
     @InjectView(R.id.ibNext) ImageButton mIbNext;
+    @InjectView(R.id.ibShare) ImageButton mIbShare;
 
     private ArrayList<ParcelableTrack> mTopTracks;
     private int mTopTrackSelected;
@@ -64,12 +67,15 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_streaming, container, false);
         ButterKnife.inject(this, view);
+        if(!(getActivity() instanceof StreamingActivity)){
+            mIbShare.setVisibility(View.VISIBLE);
+        }
         //Creating handlers of UI buttons
         mIbPrevious.setOnClickListener(this);
         mIbPlayPause.setOnClickListener(this);
         mIbNext.setOnClickListener(this);
+        mIbShare.setOnClickListener(this);
         mSbTrack.setOnSeekBarChangeListener(this);
-        //TODO: There is a bug if fragment is shown in dialog, button play/pause shows play button although it must be showing pause button
         return view;
     }
 
@@ -132,6 +138,9 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
                 fillUI();
             }else {
                 mService.loadSong(mTopTracks,mTopTrackSelected);
+            }
+            if(getActivity() instanceof StreamingCallbacks){
+                ((StreamingCallbacks)getActivity()).onContentLoaded(mTopTracks.get(mTopTrackSelected).getExternalSpotifyUrl());
             }
             mService.hideNotification();
             mBound = true;
@@ -227,7 +236,25 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
                 togglePlayPauseButton();
                 listenPlayerState();
                 break;
+            case R.id.ibShare:
+                Intent i = createShareIntent(mTopTracks.get(mTopTrackSelected).getExternalSpotifyUrl());
+                startActivity(Intent.createChooser(i,null));
+                break;
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    private Intent createShareIntent(String shareString) {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+        }else{
+            shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        }
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT,
+                shareString + StreamingActivity.SPOTIFY_STREAMER_SHARE_HASHTAG);
+        return shareIntent;
     }
 
     private void togglePlayPauseButton() {
@@ -299,5 +326,9 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
 
+    }
+
+    public interface StreamingCallbacks{
+        void onContentLoaded(String shareString);
     }
 }

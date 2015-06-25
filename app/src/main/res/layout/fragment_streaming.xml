@@ -82,5 +82,14 @@
                 android:src="@android:drawable/ic_media_next"
                 android:id="@+id/ibNext"/>
         </LinearLayout>
+
+        <ImageButton
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_share"
+            android:contentDescription="@string/share"
+            android:visibility="gone"
+            android:id="@+id/ibShare"
+            android:layout_gravity="center_horizontal" />
     </LinearLayout>
 </ScrollView>
