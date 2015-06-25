@@ -16,6 +16,10 @@ import bischof.raphael.spotifystreamer.R;
 import bischof.raphael.spotifystreamer.fragment.StreamingFragment;
 import bischof.raphael.spotifystreamer.model.ParcelableTrack;
 
+/*
+ * Activity showing the Player UI
+ * Created by biche on 24/06/2015.
+ */
 public class StreamingActivity extends AppCompatActivity implements StreamingFragment.StreamingCallbacks {
 
     public static final String SPOTIFY_STREAMER_SHARE_HASHTAG = " #SpotifyStreamerAppIsCool";

@@ -5,6 +5,10 @@ import android.support.v7.app.AppCompatActivity;
 
 import bischof.raphael.spotifystreamer.R;
 
+/*
+ * Activity that shows user preferences
+ * Created by biche on 25/06/2015.
+ */
 public class PreferenceActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {

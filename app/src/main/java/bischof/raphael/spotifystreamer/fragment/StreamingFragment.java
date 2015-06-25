@@ -35,8 +35,10 @@ import bischof.raphael.spotifystreamer.service.StreamerService;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
-/**
- * A placeholder fragment containing a simple view.
+/*
+ * Fragment containing the Player UI. This fragment is bound to a StreamerService that plays the song shown.
+ * This fragment contains 4 {@link ImageButton} that makes the StreamerService play, pause, go to next track, to previous track or that share the current track.
+ * Created by biche on 10/06/2015.
  */
 public class StreamingFragment extends DialogFragment implements View.OnClickListener,StreamerService.OnStreamerStateChangeListener,SeekBar.OnSeekBarChangeListener {
 
