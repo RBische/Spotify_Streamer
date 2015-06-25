@@ -326,15 +326,19 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
 
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
-
+        //intentionally does nothing
     }
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
-
+        //intentionally does nothing
     }
 
     public interface StreamingCallbacks{
+        /**
+         * This event is raised when the content of the StreamingFragment is fully loaded, even if the StreamingFragment is created empty and gets its data from the service.
+         * @param shareString The Spotify external URL to share
+         */
         void onContentLoaded(String shareString);
     }
 }

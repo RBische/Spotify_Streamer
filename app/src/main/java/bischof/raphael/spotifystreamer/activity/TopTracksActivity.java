@@ -37,7 +37,7 @@ public class TopTracksActivity extends AppCompatActivity implements TopTracksFra
         mStateReceiver = new ServiceStateReceiver();
         mStateReceiver.setListener(this);
         registerReceiver(mStateReceiver,filter);
-        // The detail Activity called via intent.  Inspect the intent for forecast data.
+
         Intent intent = getIntent();
         if (intent != null) {
             Bundle args = new Bundle();

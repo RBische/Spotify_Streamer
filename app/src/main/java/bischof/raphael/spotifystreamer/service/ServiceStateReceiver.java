@@ -9,7 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 
 /**
- * Broadcast receiver able to receive the StreamerService state changes.
+ * Broadcast receiver able to receive the StreamerService state changes. (Created, destroyed)
  * Created by biche on 25/06/2015.
  */
 public class ServiceStateReceiver extends BroadcastReceiver {

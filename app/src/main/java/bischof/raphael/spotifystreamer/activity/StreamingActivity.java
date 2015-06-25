@@ -21,7 +21,7 @@ import bischof.raphael.spotifystreamer.model.ParcelableTrack;
  * Created by biche on 24/06/2015.
  */
 public class StreamingActivity extends AppCompatActivity implements StreamingFragment.StreamingCallbacks {
-
+    //This string will be added at the end of the share intent content
     public static final String SPOTIFY_STREAMER_SHARE_HASHTAG = " #SpotifyStreamerAppIsCool";
     private ShareActionProvider mShareActionProvider;
 

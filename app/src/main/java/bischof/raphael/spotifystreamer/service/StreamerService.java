@@ -45,6 +45,7 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
 
     private OnStreamerStateChangeListener mListener;
 
+    //Actions available of the service
     public static final String ACTION_SHOW_UI_FROM_SONG = "ShowUIFromSong";
     public static final String ACTION_TOGGLE_PLAY_PAUSE = "TogglePlayPause";
     public static final String ACTION_NEXT_SONG = "NextSong";
@@ -56,7 +57,9 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
     public static final String EXTRA_TOP_TRACKS = "ExtraTopTracks";
     public static final String EXTRA_TOP_TRACK_SELECTED = "ExtraTopTrackSelected";
     public static final String EXTRA_SERVICE_STARTED = "ExtraServiceStarted";
+
     private static final int NOTIFICATION_ID = 668;
+
     private MediaPlayer mMediaPlayer;
     private boolean mPlayerPrepared = false;
     private boolean mPlayerPreparing = false;
@@ -110,6 +113,7 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
     @Override
     public void onCreate() {
         super.onCreate();
+        //Notifies the broadcast receivers that the service started. That broadcast allows activities to know if they have to refresh or not their menus
         Intent intent = new Intent();
         intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         intent.setAction(ACTION_NOTIFY_SERVICE_STATE);
@@ -125,6 +129,7 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
+        //Notifies the broadcast receivers that the service stopped. That broadcast allows activities to know if they have to refresh or not their menus
         Intent intent = new Intent();
         intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         intent.setAction(ACTION_NOTIFY_SERVICE_STATE);
@@ -140,6 +145,7 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
 
     @Override
     public boolean onUnbind(Intent intent) {
+        //When the fragment binding to the service stops, we also stops the service except if the mediaplayer is playing
         if(mMediaPlayer!=null&&mMediaPlayer.isPlaying()){
             showNotification();
         }else{
@@ -169,6 +175,9 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         return super.onStartCommand(intent, flags, startId);
     }
 
+    /**
+     * Switch the player to previous song. If there is no previous song, switch to last song.
+     */
     public void playPreviousSong() {
         this.mTopTrackSelected-=1;
         if(mTopTrackSelected<0){
@@ -180,6 +189,9 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         }
     }
 
+    /**
+     * Switch the player to next song. If there is no next song, switch to the first song.
+     */
     public void playNextSong() {
         this.mTopTrackSelected+=1;
         if(mTopTrackSelected==mTopTracks.size()){
@@ -191,6 +203,11 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         }
     }
 
+    /**
+     * Loads/prepare and plays the song at the specified position
+     * @param tracks A list of tracks that can be explored via Next/Previous
+     * @param currentPosition The position in the last of tracks that we want to play
+     */
     public void loadSong(ArrayList<ParcelableTrack> tracks, int currentPosition) {
         if (tracks!=null){
             boolean needsToLoadSong = false;
@@ -206,6 +223,9 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         }
     }
 
+    /**
+     * Toggle the mediaplayer to pause state or to play state depending the base state.
+     */
     public void togglePlayPause() {
         if (mPlayerPrepared){
             if(mMediaPlayer.isPlaying()){
@@ -245,6 +265,9 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         mMediaPlayer.prepareAsync();
     }
 
+    /**
+     * Show a notification to control the player.
+     */
     public void showNotification() {
         showNotification(false);
     }
@@ -367,6 +390,9 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         }
     }
 
+    /**
+     * Hide notifications that controls the player. If more than one notification has been shown, the stack is cleared.
+     */
     public void hideNotification() {
         NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         while (mNotificationCount>0){
@@ -377,6 +403,10 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         mNotificationShown = false;
     }
 
+    /**
+     * Gives the current playing time of the song
+     * @return Playing time in milliseconds
+     */
     public int getCurrentTime(){
         if (mMediaPlayer.isPlaying()){
             return mMediaPlayer.getCurrentPosition();
@@ -410,8 +440,13 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         }
     }
 
-    public void setOnStreamerStateChangeListener(OnStreamerStateChangeListener mListener) {
-        this.mListener = mListener;
+    /**
+     * Register a callback to be invoked when this service is playing a track or ended the stream.
+     *
+     * @param listener The callback that will run
+     */
+    public void setOnStreamerStateChangeListener(OnStreamerStateChangeListener listener) {
+        this.mListener = listener;
     }
 
     public interface OnStreamerStateChangeListener{

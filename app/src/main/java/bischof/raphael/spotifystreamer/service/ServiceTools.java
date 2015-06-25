@@ -10,6 +10,7 @@ import android.content.Context;
 import java.util.List;
 
 /**
+ * Class giving a helper method to know if a service is running.
  * Code found on stackoverflow post : http://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android
  * Edited by biche on 24/06/2015.
  */
