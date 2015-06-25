@@ -4,7 +4,9 @@
 
 package bischof.raphael.spotifystreamer.async;
 
+import android.content.Context;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import bischof.raphael.spotifystreamer.R;
 import bischof.raphael.spotifystreamer.model.ParcelableTrack;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
@@ -25,13 +28,16 @@ import retrofit.RetrofitError;
  */
 public class TopTracksLoader extends AsyncTask<String, Void, TopTracksLoader.Response> {
     private int mSizeOfImageToLoad;
+    private Context mContext;
 
     /**
      * Constructor
      * @param sizeOfImageToLoad size of the ImageView in px where the thumbnail will be displayed
+     * @param context Context is needed to retrieve country code preferences
      */
-    public TopTracksLoader(int sizeOfImageToLoad) {
+    public TopTracksLoader(int sizeOfImageToLoad, Context context) {
         this.mSizeOfImageToLoad = sizeOfImageToLoad;
+        this.mContext = context;
     }
 
     /**
@@ -50,7 +56,8 @@ public class TopTracksLoader extends AsyncTask<String, Void, TopTracksLoader.Res
             SpotifyApi api = new SpotifyApi();
             SpotifyService spotify = api.getService();
             Map<String, Object> options = new HashMap<>();
-            options.put("country", Locale.getDefault().getCountry());
+            String countryCode = PreferenceManager.getDefaultSharedPreferences(mContext).getString(mContext.getString(R.string.pref_country_code_key), Locale.getDefault().getCountry());
+            options.put("country",countryCode);
             Tracks tracks = spotify.getArtistTopTrack(params[0],options);
             return new Response(null,tracks.tracks);
         }catch (RetrofitError e){

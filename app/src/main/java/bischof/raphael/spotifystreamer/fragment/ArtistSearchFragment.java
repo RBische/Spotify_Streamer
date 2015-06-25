@@ -41,6 +41,8 @@ public class ArtistSearchFragment extends Fragment {
 
     private static final String ET_SAVED = "EditTextSavedInstanceState";
     private static final String LV_SAVED = "LvItemsToSave";
+    private static final String SAVE_SCROLL_POSITION = "SaveScrollPosition";
+
     private static final String LOG_TAG = ArtistSearchFragment.class.getSimpleName();
 
     @InjectView(R.id.etArtist) EditText mEtArtist;
@@ -51,6 +53,7 @@ public class ArtistSearchFragment extends Fragment {
     private Toast mToast;
     private boolean mTriggerTextChange = true;
     private Callbacks mCallbacks;
+    private int mPosition = ListView.INVALID_POSITION;
 
     public ArtistSearchFragment() {
     }
@@ -139,9 +142,15 @@ public class ArtistSearchFragment extends Fragment {
             mTriggerTextChange = false;
             mEtArtist.setText(savedInstanceState.getString(ET_SAVED));
             if(savedInstanceState.containsKey(LV_SAVED)){
+                mPosition = savedInstanceState.getInt(SAVE_SCROLL_POSITION);
                 ArrayList<ParcelableArtist> artists = savedInstanceState.getParcelableArrayList(LV_SAVED);
                 mLvArtistAdapter.clear();
                 mLvArtistAdapter.addAll(artists);
+                if (mPosition != ListView.INVALID_POSITION) {
+                    // If we don't need to restart the loader, and there's a desired position to restore
+                    // to, do so now.
+                    mLvArtist.smoothScrollToPosition(mPosition);
+                }
             }
         }
     }
@@ -151,6 +160,7 @@ public class ArtistSearchFragment extends Fragment {
         super.onSaveInstanceState(outState);
         outState.putString(ET_SAVED,mEtArtist.getText().toString());
         outState.putParcelableArrayList(LV_SAVED,mLvArtistAdapter.getArtists());
+        outState.putInt(SAVE_SCROLL_POSITION,mPosition);
     }
 
     /**
@@ -206,7 +216,7 @@ public class ArtistSearchFragment extends Fragment {
             mLoader.execute(artist);
         }
     }
-//TODO: Show selected element
+
     public interface Callbacks {
         void onAskToShowDetailFragment(String name, String id, ArrayList<ParcelableTrack> tracks, int topTrackSelected);
     }

@@ -118,7 +118,7 @@ public class TopTracksActivityFragment extends Fragment implements AdapterView.O
         //The goal is to avoid big bitmaps download and to load image at the best quality that can be displayed
         int sizeOfImageToLoad = (int) getResources().getDimension(R.dimen.tile_height_avatar_with_one_line_text);
 
-        TopTracksLoader loader = new TopTracksLoader(sizeOfImageToLoad);
+        TopTracksLoader loader = new TopTracksLoader(sizeOfImageToLoad,getActivity());
         loader.setOnContentLoadedListener(new OnContentLoadedListener<ArrayList<ParcelableTrack>>() {
             @Override
             public void onContentLoaded(ArrayList<ParcelableTrack> content) {

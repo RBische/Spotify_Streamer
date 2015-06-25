@@ -18,6 +18,7 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -51,13 +52,17 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
     public static final String ACTION_NEXT_SONG = "NextSong";
     public static final String ACTION_PREVIOUS_SONG = "PreviousSong";
     public static final String ACTION_LOAD_SONG = "LoadSong";
+
+    public static final String ACTION_NOTIFY_SERVICE_STATE = "bischof.raphael.spotifystreamer.service.ServiceStateUpdate";
     public static final String EXTRA_TOP_TRACKS = "ExtraTopTracks";
     public static final String EXTRA_TOP_TRACK_SELECTED = "ExtraTopTrackSelected";
+    public static final String EXTRA_SERVICE_STARTED = "ExtraServiceStarted";
     private static final int NOTIFICATION_ID = 668;
     private MediaPlayer mMediaPlayer;
     private boolean mPlayerPrepared = false;
     private boolean mPlayerPreparing = false;
     private boolean mNotificationShown = true;
+    private boolean mPlayerEmpty = true;
     private ArrayList<ParcelableTrack> mTopTracks;
     private int mTopTrackSelected;
     private int mNotificationCount = 0;
@@ -75,7 +80,13 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
     }
 
     public void seekTo(int progress) {
-        mMediaPlayer.seekTo(progress);
+        if(!mPlayerEmpty){
+            mMediaPlayer.seekTo(progress);
+        }
+    }
+
+    public boolean isPlayerEmpty() {
+        return mPlayerEmpty;
     }
 
     /**
@@ -87,6 +98,26 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
             // Return this instance of LocalService so clients can call public methods
             return StreamerService.this;
         }
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Intent intent = new Intent();
+        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        intent.setAction(ACTION_NOTIFY_SERVICE_STATE);
+        intent.putExtra(EXTRA_SERVICE_STARTED, true);
+        sendBroadcast(intent);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Intent intent = new Intent();
+        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        intent.setAction(ACTION_NOTIFY_SERVICE_STATE);
+        intent.putExtra(EXTRA_SERVICE_STARTED, false);
+        sendBroadcast(intent);
     }
 
     @Nullable
@@ -110,32 +141,42 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
                     if(mNotificationShown){
                         hideNotification();
                     }else {
-                        if(mMediaPlayer.isPlaying()){
+                        if(mMediaPlayer!=null&&mMediaPlayer.isPlaying()){
                             showNotification();
+                        }else{
+                            stopSelf();
                         }
                     }
                 }else if (intent.getAction().equals(ACTION_NEXT_SONG)){
-                    this.mTopTrackSelected+=1;
-                    if(mTopTrackSelected==mTopTracks.size()){
-                        mTopTrackSelected = 0;
-                    }
-                    loadSong();
-                    if(mNotificationShown){
-                        showNotification(true);
-                    }
+                    playNextSong();
                 }else if (intent.getAction().equals(ACTION_PREVIOUS_SONG)) {
-                    this.mTopTrackSelected-=1;
-                    if(mTopTrackSelected<0){
-                        mTopTrackSelected = mTopTracks.size()-1;
-                    }
-                    loadSong();
-                    if(mNotificationShown){
-                        showNotification(true);
-                    }
+                    playPreviousSong();
                 }
             }
         }
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    public void playPreviousSong() {
+        this.mTopTrackSelected-=1;
+        if(mTopTrackSelected<0){
+            mTopTrackSelected = mTopTracks.size()-1;
+        }
+        loadSong();
+        if(mNotificationShown){
+            showNotification(true);
+        }
+    }
+
+    public void playNextSong() {
+        this.mTopTrackSelected+=1;
+        if(mTopTrackSelected==mTopTracks.size()){
+            mTopTrackSelected = 0;
+        }
+        loadSong();
+        if(mNotificationShown){
+            showNotification(true);
+        }
     }
 
     public void loadSong(ArrayList<ParcelableTrack> tracks, int currentPosition) {
@@ -145,6 +186,7 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         }
         this.mTopTracks = tracks;
         this.mTopTrackSelected = currentPosition;
+        mPlayerEmpty = false;
         if(needsToLoadSong){
             loadSong();
         }
@@ -229,7 +271,6 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Notification.Builder builder = new Notification.Builder(getApplicationContext())
-                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                             // Add media control buttons that invoke intents in your media service
                     .addAction(android.R.drawable.ic_media_previous, "Previous", previousPendingIntent)
                     .addAction(btnPlayPause, "Pause", pausePendingIntent)
@@ -240,11 +281,15 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
                     .setContentText(currentTrack.getName() + " - " + currentTrack.getAlbumName())
                     .setContentTitle(getApplicationContext().getString(R.string.now_playing))
                     .setContentIntent(pi);
+            if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean(getString(R.string.pref_enable_notifications_key),true)){
+                builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+            }else{
+                builder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+            }
             buildLargeIcon(currentTrack.getImageUrlLarge(),null,builder);
             notification = builder.build();
         }else{
             NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext())
-                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                             // Add media control buttons that invoke intents in your media service
                     .addAction(android.R.drawable.ic_media_previous, "Previous", previousPendingIntent)
                     .addAction(btnPlayPause, "Pause", pausePendingIntent)
@@ -252,6 +297,11 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
                     .setContentText(currentTrack.getName() + " - " + currentTrack.getAlbumName())
                     .setContentTitle(getApplicationContext().getString(R.string.now_playing))
                     .setContentIntent(pi);
+            if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean(getString(R.string.pref_enable_notifications_key),true)){
+                builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+            }else{
+                builder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+            }
             buildLargeIcon(currentTrack.getImageUrlLarge(),builder,null);
             notification = builder.build();
         }
@@ -336,6 +386,7 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
     public void onCompletion(MediaPlayer mp) {
         if(mNotificationShown){
             hideNotification();
+            stopSelf();
         }else{
             if (mListener!=null){
                 mListener.onPlayEnding();

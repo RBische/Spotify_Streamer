@@ -4,6 +4,7 @@
 package bischof.raphael.spotifystreamer.activity;
 
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -16,6 +17,7 @@ import bischof.raphael.spotifystreamer.fragment.ArtistSearchFragment;
 import bischof.raphael.spotifystreamer.fragment.StreamingFragment;
 import bischof.raphael.spotifystreamer.fragment.TopTracksActivityFragment;
 import bischof.raphael.spotifystreamer.model.ParcelableTrack;
+import bischof.raphael.spotifystreamer.service.ServiceStateReceiver;
 import bischof.raphael.spotifystreamer.service.ServiceTools;
 import bischof.raphael.spotifystreamer.service.StreamerService;
 
@@ -23,7 +25,7 @@ import bischof.raphael.spotifystreamer.service.StreamerService;
  * Starting activty of the app
  * Created by biche on 10/06/2015.
  */
-public class HomeActivity extends AppCompatActivity implements ArtistSearchFragment.Callbacks,TopTracksActivityFragment.Callbacks {
+public class HomeActivity extends AppCompatActivity implements ArtistSearchFragment.Callbacks,TopTracksActivityFragment.Callbacks,ServiceStateReceiver.OnServiceStateChangeListener {
 
     private static final String TAG_STREAMING_FRAGMENT = "StreamingFragment";
     //Is set to true if it's TabletUI
@@ -36,6 +38,10 @@ public class HomeActivity extends AppCompatActivity implements ArtistSearchFragm
         if (findViewById(R.id.container)!=null){
             mTwoPane = true;
         }
+        IntentFilter filter = new IntentFilter(StreamerService.ACTION_NOTIFY_SERVICE_STATE);
+        ServiceStateReceiver stateReceiver = new ServiceStateReceiver();
+        stateReceiver.setListener(this);
+        registerReceiver(stateReceiver,filter);
     }
 
 
@@ -59,12 +65,6 @@ public class HomeActivity extends AppCompatActivity implements ArtistSearchFragm
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        invalidateOptionsMenu();
     }
 
     @Override
@@ -108,5 +108,10 @@ public class HomeActivity extends AppCompatActivity implements ArtistSearchFragm
         StreamingFragment fragment = new StreamingFragment();
         fragment.setArguments(args);
         fragment.show(getSupportFragmentManager(),TAG_STREAMING_FRAGMENT);
+    }
+
+    @Override
+    public void onServiceStateChange(boolean started) {
+        invalidateOptionsMenu();
     }
 }

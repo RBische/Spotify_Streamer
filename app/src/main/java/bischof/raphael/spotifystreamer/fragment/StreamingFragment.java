@@ -178,9 +178,13 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
                     mTopTrackSelected = mTopTracks.size()-1;
                 }
                 fillUI();
-                Intent intentPrevious = new Intent(getActivity(), StreamerService.class);
-                intentPrevious.setAction(StreamerService.ACTION_PREVIOUS_SONG);
-                getActivity().startService(intentPrevious);
+                if(mService!=null&&!mService.isPlayerEmpty()){
+                    mService.playPreviousSong();
+                }else{
+                    if (mService!=null){
+                        mService.loadSong(mTopTracks,mTopTrackSelected);
+                    }
+                }
                 break;
             case R.id.ibNext:
                 this.mTopTrackSelected+=1;
@@ -188,13 +192,21 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
                     mTopTrackSelected = 0;
                 }
                 fillUI();
-                Intent intentNext = new Intent(getActivity(), StreamerService.class);
-                intentNext.setAction(StreamerService.ACTION_NEXT_SONG);
-                getActivity().startService(intentNext);
+                if(mService!=null&&!mService.isPlayerEmpty()){
+                    mService.playNextSong();
+                }else{
+                    if (mService!=null){
+                        mService.loadSong(mTopTracks,mTopTrackSelected);
+                    }
+                }
                 break;
             case R.id.ibPlayPause:
-                if(mService!=null){
+                if(mService!=null&&mService.isPlayerPrepared()){
                     mService.togglePlayPause();
+                }else{
+                    if (mService!=null){
+                        mService.loadSong(mTopTracks,mTopTrackSelected);
+                    }
                 }
                 togglePlayPauseButton();
                 listenPlayerState();
