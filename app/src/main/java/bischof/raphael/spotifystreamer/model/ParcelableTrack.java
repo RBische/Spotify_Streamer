@@ -17,7 +17,6 @@ import kaaes.spotify.webapi.android.models.Track;
  * Created by biche on 11/06/2015.
  */
 public class ParcelableTrack implements Parcelable {
-    private long duration;
     private String artist;
     private String artistId;
     private String name;
@@ -27,7 +26,7 @@ public class ParcelableTrack implements Parcelable {
     private String previewUrl;
     private String externalSpotifyUrl;
 
-    public ParcelableTrack(String name, String albumName, String artist, String artistID, String imageUrlSmall, String imageUrlLarge, String previewUrl, String externalSpotifyUrl,long duration) {
+    public ParcelableTrack(String name, String albumName, String artist, String artistID, String imageUrlSmall, String imageUrlLarge, String previewUrl, String externalSpotifyUrl) {
         this.name = name;
         this.albumName = albumName;
         this.artist = artist;
@@ -35,7 +34,6 @@ public class ParcelableTrack implements Parcelable {
         this.previewUrl = previewUrl;
         this.imageUrlSmall = imageUrlSmall;
         this.imageUrlLarge = imageUrlLarge;
-        this.duration = duration;
         this.externalSpotifyUrl = externalSpotifyUrl;
     }
 
@@ -48,7 +46,6 @@ public class ParcelableTrack implements Parcelable {
         this.imageUrlSmall = in.readString();
         this.imageUrlLarge = in.readString();
         this.externalSpotifyUrl = in.readString();
-        this.duration = in.readLong();
     }
 
     public static final Creator<ParcelableTrack> CREATOR = new Creator<ParcelableTrack>() {
@@ -78,7 +75,6 @@ public class ParcelableTrack implements Parcelable {
         dest.writeString(imageUrlSmall);
         dest.writeString(imageUrlLarge);
         dest.writeString(externalSpotifyUrl);
-        dest.writeLong(duration);
     }
 
     public static ArrayList<ParcelableTrack> convertFromTrackList(List<Track> tracks, int sizeOfImageToLoad){
@@ -127,7 +123,7 @@ public class ParcelableTrack implements Parcelable {
                 artist = track.artists.get(0).name;
                 artistID = track.artists.get(0).id;
             }
-            ParcelableTrack parcelableTrack = new ParcelableTrack(track.name,track.album.name,artist,artistID,imageUrlSmall,imageUrlLarge,track.preview_url,track.href,track.duration_ms);
+            ParcelableTrack parcelableTrack = new ParcelableTrack(track.name,track.album.name,artist,artistID,imageUrlSmall,imageUrlLarge,track.preview_url,track.href);
             parcelableTracks.add(parcelableTrack);
         }
         return parcelableTracks;
