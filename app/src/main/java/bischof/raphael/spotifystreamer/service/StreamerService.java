@@ -32,7 +32,6 @@ import java.util.concurrent.ExecutionException;
 import bischof.raphael.spotifystreamer.R;
 import bischof.raphael.spotifystreamer.activity.HomeActivity;
 import bischof.raphael.spotifystreamer.model.ParcelableTrack;
-import kaaes.spotify.webapi.android.models.Track;
 
 /**
  * Service that stream the music from a specified track list
@@ -48,10 +47,10 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
 
     public static final String ACTION_SHOW_UI_FROM_SONG = "ShowUIFromSong";
     public static final String ACTION_TOGGLE_PLAY_PAUSE = "TogglePlayPause";
-    public static final String ACTION_TOGGLE_NOTIFICATION = "ToggleNotification";
     public static final String ACTION_NEXT_SONG = "NextSong";
     public static final String ACTION_PREVIOUS_SONG = "PreviousSong";
     public static final String ACTION_LOAD_SONG = "LoadSong";
+    public static final String ACTION_STAY_AWAKE = "ActionToForceServiceToStayAwake";
 
     public static final String ACTION_NOTIFY_SERVICE_STATE = "bischof.raphael.spotifystreamer.service.ServiceStateUpdate";
     public static final String EXTRA_TOP_TRACKS = "ExtraTopTracks";
@@ -89,6 +88,18 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         return mPlayerEmpty;
     }
 
+    public boolean isPreparing() {
+        return mPlayerPreparing;
+    }
+
+    public ArrayList<ParcelableTrack> getTopTracks() {
+        return mTopTracks;
+    }
+
+    public int getTopTrackSelected() {
+        return mTopTrackSelected;
+    }
+
     /**
      * Class used for the client Binder.  Because we know this service always
      * runs in the same process as its clients, we don't need to deal with IPC.
@@ -113,6 +124,11 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (mMediaPlayer!=null){
+            mMediaPlayer.stop();
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
         Intent intent = new Intent();
         intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         intent.setAction(ACTION_NOTIFY_SERVICE_STATE);
@@ -127,6 +143,16 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
     }
 
     @Override
+    public boolean onUnbind(Intent intent) {
+        if(mMediaPlayer!=null&&mMediaPlayer.isPlaying()){
+            showNotification();
+        }else{
+            stopSelf();
+        }
+        return super.onUnbind(intent);
+    }
+
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent!=null){
             if (intent.getAction()!=null){
@@ -137,16 +163,6 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
                     loadSong(tracks,currentPosition);
                 }else if (intent.getAction().equals(ACTION_TOGGLE_PLAY_PAUSE)){
                     togglePlayPause();
-                }else if (intent.getAction().equals(ACTION_TOGGLE_NOTIFICATION)){
-                    if(mNotificationShown){
-                        hideNotification();
-                    }else {
-                        if(mMediaPlayer!=null&&mMediaPlayer.isPlaying()){
-                            showNotification();
-                        }else{
-                            stopSelf();
-                        }
-                    }
                 }else if (intent.getAction().equals(ACTION_NEXT_SONG)){
                     playNextSong();
                 }else if (intent.getAction().equals(ACTION_PREVIOUS_SONG)) {
@@ -180,15 +196,17 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
     }
 
     public void loadSong(ArrayList<ParcelableTrack> tracks, int currentPosition) {
-        boolean needsToLoadSong = false;
-        if (mTopTracks==null||!mTopTracks.get(mTopTrackSelected).getPreviewUrl().equals(tracks.get(currentPosition).getPreviewUrl())){
-            needsToLoadSong = true;
-        }
-        this.mTopTracks = tracks;
-        this.mTopTrackSelected = currentPosition;
-        mPlayerEmpty = false;
-        if(needsToLoadSong){
-            loadSong();
+        if (tracks!=null){
+            boolean needsToLoadSong = false;
+            if (mTopTracks==null||!mTopTracks.get(mTopTrackSelected).getPreviewUrl().equals(tracks.get(currentPosition).getPreviewUrl())){
+                needsToLoadSong = true;
+            }
+            this.mTopTracks = tracks;
+            this.mTopTrackSelected = currentPosition;
+            mPlayerEmpty = false;
+            if(needsToLoadSong){
+                loadSong();
+            }
         }
     }
 
@@ -231,7 +249,7 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         mMediaPlayer.prepareAsync();
     }
 
-    private void showNotification() {
+    public void showNotification() {
         showNotification(false);
     }
 
@@ -379,6 +397,8 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         mp.setOnCompletionListener(this);
         if (mListener!=null){
             mListener.onPlaying(mp.getDuration());
+        }else{
+            showNotification();
         }
     }
 

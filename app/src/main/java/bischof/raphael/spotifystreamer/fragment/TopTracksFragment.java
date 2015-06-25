@@ -5,9 +5,8 @@
 package bischof.raphael.spotifystreamer.fragment;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -21,7 +20,6 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import bischof.raphael.spotifystreamer.R;
-import bischof.raphael.spotifystreamer.activity.StreamingActivity;
 import bischof.raphael.spotifystreamer.adapter.TopTracksAdapter;
 import bischof.raphael.spotifystreamer.async.OnContentLoadedListener;
 import bischof.raphael.spotifystreamer.async.TopTracksLoader;
@@ -35,9 +33,9 @@ import butterknife.InjectView;
  * ListView uses an {@link TopTracksAdapter} to display items.
  * Created by biche on 11/06/2015.
  */
-public class TopTracksActivityFragment extends Fragment implements AdapterView.OnItemClickListener {
+public class TopTracksFragment extends Fragment implements AdapterView.OnItemClickListener {
 
-    private static final String LOG_TAG = TopTracksActivityFragment.class.getSimpleName();
+    private static final String LOG_TAG = TopTracksFragment.class.getSimpleName();
     private static final String LV_SAVED = "LvItemsToSave";
     public static final String ARG_TITLE = "Title";
     public static final String ARG_MUST_FILL_UI_WITH_DATAS = "FillUIXWithDatas";
@@ -47,7 +45,7 @@ public class TopTracksActivityFragment extends Fragment implements AdapterView.O
     private Callbacks mCallbacks;
     @InjectView(R.id.lvTopTracks) ListView mLvTopTracks;
 
-    public TopTracksActivityFragment() {
+    public TopTracksFragment() {
     }
 
     @Override

@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import bischof.raphael.spotifystreamer.R;
 import bischof.raphael.spotifystreamer.fragment.ArtistSearchFragment;
 import bischof.raphael.spotifystreamer.fragment.StreamingFragment;
-import bischof.raphael.spotifystreamer.fragment.TopTracksActivityFragment;
+import bischof.raphael.spotifystreamer.fragment.TopTracksFragment;
 import bischof.raphael.spotifystreamer.model.ParcelableTrack;
 import bischof.raphael.spotifystreamer.service.ServiceStateReceiver;
 import bischof.raphael.spotifystreamer.service.ServiceTools;
@@ -25,11 +25,12 @@ import bischof.raphael.spotifystreamer.service.StreamerService;
  * Starting activty of the app
  * Created by biche on 10/06/2015.
  */
-public class HomeActivity extends AppCompatActivity implements ArtistSearchFragment.Callbacks,TopTracksActivityFragment.Callbacks,ServiceStateReceiver.OnServiceStateChangeListener {
+public class HomeActivity extends AppCompatActivity implements ArtistSearchFragment.Callbacks,TopTracksFragment.Callbacks,ServiceStateReceiver.OnServiceStateChangeListener {
 
     private static final String TAG_STREAMING_FRAGMENT = "StreamingFragment";
     //Is set to true if it's TabletUI
     private boolean mTwoPane = false;
+    private ServiceStateReceiver mStateReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,11 +40,16 @@ public class HomeActivity extends AppCompatActivity implements ArtistSearchFragm
             mTwoPane = true;
         }
         IntentFilter filter = new IntentFilter(StreamerService.ACTION_NOTIFY_SERVICE_STATE);
-        ServiceStateReceiver stateReceiver = new ServiceStateReceiver();
-        stateReceiver.setListener(this);
-        registerReceiver(stateReceiver,filter);
+        mStateReceiver = new ServiceStateReceiver();
+        mStateReceiver.setListener(this);
+        registerReceiver(mStateReceiver,filter);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mStateReceiver);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -56,12 +62,18 @@ public class HomeActivity extends AppCompatActivity implements ArtistSearchFragm
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            startActivity(new Intent(this, PreferenceActivity.class));
-            return true;
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                startActivity(new Intent(this, PreferenceActivity.class));
+                return true;
+            case R.id.action_now_playing:
+                if(mTwoPane){
+                    onAskToShowPlayer(null,0);
+                }else{
+                    Intent i = new Intent(this,StreamingActivity.class);
+                    startActivity(i);
+                }
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -86,14 +98,14 @@ public class HomeActivity extends AppCompatActivity implements ArtistSearchFragm
             }
         }else{
             Bundle args = new Bundle();
-            args.putString(TopTracksActivityFragment.ARG_TITLE, name);
-            args.putString(TopTracksActivityFragment.ARG_ARTIST_ID, id);
-            args.putBoolean(TopTracksActivityFragment.ARG_MUST_FILL_UI_WITH_DATAS, tracks!=null);
+            args.putString(TopTracksFragment.ARG_TITLE, name);
+            args.putString(TopTracksFragment.ARG_ARTIST_ID, id);
+            args.putBoolean(TopTracksFragment.ARG_MUST_FILL_UI_WITH_DATAS, tracks!=null);
             if (tracks!=null){
                 args.putParcelableArrayList(StreamingFragment.EXTRA_TOP_TRACKS, tracks);
                 args.putInt(StreamingFragment.EXTRA_TOP_TRACK_SELECTED, topTrackSelected);
             }
-            TopTracksActivityFragment fragment = new TopTracksActivityFragment();
+            TopTracksFragment fragment = new TopTracksFragment();
             fragment.setArguments(args);
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.container, fragment).commit();

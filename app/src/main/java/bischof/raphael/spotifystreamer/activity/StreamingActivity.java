@@ -1,11 +1,9 @@
 package bischof.raphael.spotifystreamer.activity;
 
 import android.content.Intent;
-import android.support.v4.app.NavUtils;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
@@ -35,14 +33,6 @@ public class StreamingActivity extends AppCompatActivity {
             }
 
         }
-    }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_streaming, menu);
-        return true;
     }
 
     @Override

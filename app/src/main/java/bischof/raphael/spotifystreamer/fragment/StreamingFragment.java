@@ -5,12 +5,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,11 +50,11 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
     private ArrayList<ParcelableTrack> mTopTracks;
     private int mTopTrackSelected;
     private boolean mIsPlaying = true;
-    private boolean mMustLoadSong =false;
 
     private StreamerService mService;
     private boolean mBound = false;
     private Handler mHandler = new Handler();
+    private boolean mNeedsToRefreshFromService = false;
 
     public StreamingFragment() {
     }
@@ -89,7 +88,9 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
         if (savedInstanceState==null){
             this.mTopTracks = getArguments().getParcelableArrayList(EXTRA_TOP_TRACKS);
             this.mTopTrackSelected = getArguments().getInt(EXTRA_TOP_TRACK_SELECTED);
-            mMustLoadSong = true;
+            if(mTopTracks==null){
+                mNeedsToRefreshFromService = true;
+            }
         }else{
             this.mTopTracks = savedInstanceState.getParcelableArrayList(EXTRA_TOP_TRACKS);
             this.mTopTrackSelected = savedInstanceState.getInt(EXTRA_TOP_TRACK_SELECTED);
@@ -101,13 +102,15 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
         mSbTrack.setProgress(0);
         mTvCurrentTime.setText("");
         mTvDuration.setText("");
-        ParcelableTrack track = mTopTracks.get(mTopTrackSelected);
-        mTvArtist.setText(track.getArtist());
-        Picasso.with(getActivity())
-            .load(track.getImageUrlLarge())
-            .into(mIvThumb);
-        mTvAlbum.setText(track.getAlbumName());
-        mTvTrackName.setText(track.getName());
+        if (mTopTracks!=null){
+            ParcelableTrack track = mTopTracks.get(mTopTrackSelected);
+            mTvArtist.setText(track.getArtist());
+            Picasso.with(getActivity())
+                    .load(track.getImageUrlLarge())
+                    .into(mIvThumb);
+            mTvAlbum.setText(track.getAlbumName());
+            mTvTrackName.setText(track.getName());
+        }
     }
 
     /** Defines callbacks for service binding, passed to bindService() */
@@ -116,16 +119,23 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
         @Override
         public void onServiceConnected(ComponentName className,
                                        IBinder service) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            // We've bound to StreamerBinder, cast the IBinder and get StreamerBinder instance
             StreamerService.StreamerBinder binder = (StreamerService.StreamerBinder) service;
             mService = binder.getService();
-            listenPlayerState();
-            mService.hideNotification();
-            mBound = true;
-            if(mMustLoadSong){
-                mMustLoadSong =false;
+            //The intent is here only to make the bound service persistent
+            Intent intent = new Intent(getActivity(), StreamerService.class);
+            intent.setAction(StreamerService.ACTION_STAY_AWAKE);
+            getActivity().startService(intent);
+            if(mNeedsToRefreshFromService){
+                mTopTracks = mService.getTopTracks();
+                mTopTrackSelected = mService.getTopTrackSelected();
+                fillUI();
+            }else {
                 mService.loadSong(mTopTracks,mTopTrackSelected);
             }
+            mService.hideNotification();
+            mBound = true;
+            listenPlayerState();
         }
 
         @Override
@@ -151,20 +161,22 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        Intent intent = new Intent(getActivity(), StreamerService.class);
-        intent.setAction(StreamerService.ACTION_TOGGLE_NOTIFICATION);
-        getActivity().startService(intent);
+    public void onStop() {
+        super.onStop();
         if (mBound) {
+            if (mService.isPlaying()){
+                mService.showNotification();
+            }else{
+                mService.stopSelf();
+            }
             getActivity().unbindService(mConnection);
             mBound = false;
         }
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onStart() {
+        super.onStart();
         Intent intent = new Intent(getActivity(), StreamerService.class);
         getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
@@ -173,30 +185,34 @@ public class StreamingFragment extends DialogFragment implements View.OnClickLis
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.ibPrevious:
-                this.mTopTrackSelected-=1;
-                if(mTopTrackSelected<0){
-                    mTopTrackSelected = mTopTracks.size()-1;
-                }
-                fillUI();
-                if(mService!=null&&!mService.isPlayerEmpty()){
-                    mService.playPreviousSong();
-                }else{
-                    if (mService!=null){
-                        mService.loadSong(mTopTracks,mTopTrackSelected);
+                if(mTopTracks!=null){
+                    this.mTopTrackSelected-=1;
+                    if(mTopTrackSelected<0){
+                        mTopTrackSelected = mTopTracks.size()-1;
+                    }
+                    fillUI();
+                    if(mService!=null&&!mService.isPlayerEmpty()){
+                        mService.playPreviousSong();
+                    }else{
+                        if (mService!=null){
+                            mService.loadSong(mTopTracks,mTopTrackSelected);
+                        }
                     }
                 }
                 break;
             case R.id.ibNext:
-                this.mTopTrackSelected+=1;
-                if(mTopTrackSelected==mTopTracks.size()){
-                    mTopTrackSelected = 0;
-                }
-                fillUI();
-                if(mService!=null&&!mService.isPlayerEmpty()){
-                    mService.playNextSong();
-                }else{
-                    if (mService!=null){
-                        mService.loadSong(mTopTracks,mTopTrackSelected);
+                if(mTopTracks!=null){
+                    this.mTopTrackSelected+=1;
+                    if(mTopTrackSelected==mTopTracks.size()){
+                        mTopTrackSelected = 0;
+                    }
+                    fillUI();
+                    if(mService!=null&&!mService.isPlayerEmpty()){
+                        mService.playNextSong();
+                    }else{
+                        if (mService!=null){
+                            mService.loadSong(mTopTracks,mTopTrackSelected);
+                        }
                     }
                 }
                 break;
