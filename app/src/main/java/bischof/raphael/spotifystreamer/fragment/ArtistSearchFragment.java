@@ -5,9 +5,8 @@
 package bischof.raphael.spotifystreamer.fragment;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -22,7 +21,6 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import bischof.raphael.spotifystreamer.R;
-import bischof.raphael.spotifystreamer.activity.TopTracksActivity;
 import bischof.raphael.spotifystreamer.adapter.ArtistAdapter;
 import bischof.raphael.spotifystreamer.async.ArtistLoader;
 import bischof.raphael.spotifystreamer.async.OnContentLoadedListener;

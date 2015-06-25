@@ -88,10 +88,6 @@ public class StreamerService extends Service implements MediaPlayer.OnPreparedLi
         return mPlayerEmpty;
     }
 
-    public boolean isPreparing() {
-        return mPlayerPreparing;
-    }
-
     public ArrayList<ParcelableTrack> getTopTracks() {
         return mTopTracks;
     }

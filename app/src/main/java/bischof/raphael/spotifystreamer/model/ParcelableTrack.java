@@ -157,10 +157,6 @@ public class ParcelableTrack implements Parcelable {
         return artist;
     }
 
-    public long getDuration() {
-        return duration;
-    }
-
     public String getArtistId() {
         return artistId;
     }
